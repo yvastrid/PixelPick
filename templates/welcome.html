@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido - PixelPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/welcome.css') }}">
+</head>
+<body class="welcome-body">
+    <!-- Animated Background -->
+    <div class="welcome-background">
+        <div class="background-stars"></div>
+        <div class="nebula-gradient"></div>
+        <div class="floating-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="welcome-header">
+        <a href="{{ url_for('welcome') }}" class="logo-link">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PixelPick Logo" class="welcome-logo">
+        </a>
+        <div class="header-actions">
+            <button class="header-icon search-icon" id="searchButton" aria-label="Buscar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+            </button>
+            <button class="header-icon profile-icon" id="profileButton" aria-label="Perfil">
+                <div class="profile-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+            </button>
+        </div>
+    </header>
+
+    <!-- Profile Dropdown -->
+    <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown-content">
+            <!-- User Info Section -->
+            <div class="profile-info">
+                <div class="profile-avatar-large">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div class="profile-details">
+                    <h3 class="profile-name">Astrid Marquez</h3>
+                    <p class="profile-email">cheesekimbapastrid@gmail.com</p>
+                </div>
+            </div>
+
+            <!-- Separator -->
+            <div class="profile-separator"></div>
+
+            <!-- Menu Items -->
+            <div class="profile-menu">
+                <a href="#" class="profile-menu-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Mi Perfil</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="profile-menu-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24-4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24 4.24"/>
+                    </svg>
+                    <span>Configuración</span>
+                </a>
+                <a href="#" class="profile-menu-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    <span>Suscripción</span>
+                </a>
+                <a href="#" class="profile-menu-item logout-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Modal -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-modal-content">
+            <div class="search-input-wrapper">
+                <svg class="search-icon-large" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="search-input" placeholder="Buscar juegos..." id="searchInput" autofocus>
+                <button class="search-close" id="searchClose">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="search-results" id="searchResults">
+                <!-- Search results will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero-welcome">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="welcome-title">
+                    <span class="title-line-1">BIENVENIDO</span>
+                    <span class="title-line-2">A CASA</span>
+                </h1>
+                <p class="welcome-subtitle">
+                    Tu aventura gaming comienza aquí. Descubre juegos increíbles con recomendaciones personalizadas impulsadas por IA que entienden tus gustos y te ayudan a encontrar el juego perfecto para ti.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#ai-recommendations" class="cta-primary">
+                        <span>Explorar Recomendaciones IA</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                    <a href="#catalog" class="cta-secondary">
+                        Ver Catálogo Completo
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="character-glow"></div>
+                <div class="pulse-ring ring-1"></div>
+                <div class="pulse-ring ring-2"></div>
+                <div class="pulse-ring ring-3"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Recommendations Section -->
+    <section class="ai-recommendations" id="ai-recommendations">
+        <div class="section-container">
+            <div class="ai-badge">
+                <svg class="ai-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                    <path d="M2 17l10 5 10-5"/>
+                    <path d="M2 12l10 5 10-5"/>
+                </svg>
+                <span>AI-Powered</span>
+            </div>
+            <h2 class="section-title">Elegidos para ti</h2>
+            <p class="section-description">
+                Nuestra IA ha analizado tus preferencias y te recomienda estos juegos
+            </p>
+            
+            <div class="recommendations-grid">
+                <!-- Game Card 1 -->
+                <div class="game-card">
+                    <div class="game-image">
+                        <div class="game-placeholder game-1">
+                            <span>GAME</span>
+                        </div>
+                        <div class="game-badge">NUEVO</div>
+                    </div>
+                    <div class="game-info">
+                        <h3 class="game-title">Mario Kart</h3>
+                        <div class="ai-reason">
+                            <svg class="brain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44L6.5 19.5a2.5 2.5 0 0 0-4.96-.44L1 20.5"/>
+                            </svg>
+                            <span>Te gusta la competencia rápida y casual</span>
+                        </div>
+                        <div class="game-platforms">
+                            <span class="platform-badge">Android</span>
+                            <span class="platform-badge">iOS</span>
+                        </div>
+                        <div class="game-price">$250</div>
+                    </div>
+                </div>
+
+                <!-- Game Card 2 -->
+                <div class="game-card">
+                    <div class="game-image">
+                        <div class="game-placeholder game-2">
+                            <span>GAME</span>
+                        </div>
+                        <div class="game-badge">POPULAR</div>
+                    </div>
+                    <div class="game-info">
+                        <h3 class="game-title">Roblox</h3>
+                        <div class="ai-reason">
+                            <svg class="brain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44L6.5 19.5a2.5 2.5 0 0 0-4.96-.44L1 20.5"/>
+                            </svg>
+                            <span>Te gusta la creatividad y el mundo abierto</span>
+                        </div>
+                        <div class="game-platforms">
+                            <span class="platform-badge">Android</span>
+                            <span class="platform-badge">iOS</span>
+                        </div>
+                        <div class="game-price">$150</div>
+                    </div>
+                </div>
+
+                <!-- Game Card 3 -->
+                <div class="game-card">
+                    <div class="game-image">
+                        <div class="game-placeholder game-3">
+                            <span>GAME</span>
+                        </div>
+                        <div class="game-badge">TRENDING</div>
+                    </div>
+                    <div class="game-info">
+                        <h3 class="game-title">Call of Duty</h3>
+                        <div class="ai-reason">
+                            <svg class="brain-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44L6.5 19.5a2.5 2.5 0 0 0-4.96-.44L1 20.5"/>
+                            </svg>
+                            <span>Te gusta la acción intensa y estratégica</span>
+                        </div>
+                        <div class="game-platforms">
+                            <span class="platform-badge">PC</span>
+                            <span class="platform-badge">Console</span>
+                        </div>
+                        <div class="game-price">$500</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-action">
+                <a href="#catalog" class="ai-button">
+                    <svg class="ai-button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                    <span>Obtener Más Recomendaciones de IA</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Catalog Section -->
+    <section class="catalog-section" id="catalog">
+        <div class="section-container">
+            <h2 class="catalog-title">Catálogo Completo</h2>
+            <p class="catalog-subtitle">Explora nuestra colección de los mejores videojuegos</p>
+            
+            <div class="catalog-grid">
+                <!-- Catalog items will be dynamically loaded here -->
+                <div class="catalog-item">
+                    <div class="catalog-image">
+                        <div class="catalog-placeholder">GAME</div>
+                    </div>
+                    <div class="catalog-info">
+                        <h3 class="catalog-item-title">Space Wars</h3>
+                        <p class="catalog-item-desc">Engage in intergalactic battles, explore unknown galaxies, and command</p>
+                        <span class="catalog-free">FREE</span>
+                    </div>
+                </div>
+
+                <div class="catalog-item">
+                    <div class="catalog-image">
+                        <div class="catalog-placeholder">GAME</div>
+                    </div>
+                    <div class="catalog-info">
+                        <h3 class="catalog-item-title">Return of the Cars</h3>
+                        <p class="catalog-item-desc">Rev up your engines and race through thrilling tracks. Customize your ride</p>
+                        <span class="catalog-free">FREE</span>
+                    </div>
+                </div>
+
+                <div class="catalog-item">
+                    <div class="catalog-image">
+                        <div class="catalog-placeholder">GAME</div>
+                    </div>
+                    <div class="catalog-info">
+                        <h3 class="catalog-item-title">Planes of Gloria</h3>
+                        <p class="catalog-item-desc">Soar through the skies, engage in epic dogfights, and master aerial combat</p>
+                        <span class="catalog-free">FREE</span>
+                    </div>
+                </div>
+
+                <div class="catalog-item">
+                    <div class="catalog-image">
+                        <div class="catalog-placeholder">GAME</div>
+                    </div>
+                    <div class="catalog-info">
+                        <h3 class="catalog-item-title">Earth Wars</h3>
+                        <p class="catalog-item-desc">Rewrite history in intense global battles. Lead nations, command armies</p>
+                        <span class="catalog-free">FREE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/welcome.js') }}"></script>
+</body>
+</html>
+

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - PixelPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body class="login-body">
+    <!-- Animated Background Elements -->
+    <div class="background-stars"></div>
+    <div class="nebula-effect"></div>
+    <div class="floating-star star-1"></div>
+    <div class="floating-star star-2"></div>
+    <div class="floating-star star-3"></div>
+
+    <!-- Main Container -->
+    <div class="login-container">
+        <!-- Logo -->
+        <div class="login-logo">
+            <a href="{{ url_for('signin') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PixelPick Logo">
+            </a>
+        </div>
+
+        <!-- Form Card -->
+        <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+                <h1 class="login-title">Bienvenido de vuelta</h1>
+                <p class="login-subtitle">
+                    Inicia sesión para continuar tu aventura gaming.
+                </p>
+            </div>
+
+            <!-- Form -->
+            <form class="login-form" id="signinForm">
+                <!-- Email -->
+                <div class="form-group">
+                    <input type="email" id="email" name="email" placeholder="Correo electrónico" required>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group password-group">
+                    <input type="password" id="password" name="password" placeholder="Contraseña" required>
+                    <button type="button" class="password-toggle" id="passwordToggle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-button">
+                    <span>INICIAR SESIÓN</span>
+                </button>
+
+                <!-- Register Link -->
+                <div class="register-link">
+                    <p>¿No tienes una cuenta? <a href="{{ url_for('login') }}">Regístrate aquí</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/signin.js') }}"></script>
+</body>
+</html>
+

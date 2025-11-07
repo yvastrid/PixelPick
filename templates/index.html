@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelPick - Descubre tu próximo juego favorito</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="{{ url_for('signin') }}" class="login-btn">Iniciar sesión</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Left Section - Text Content -->
+        <div class="left-section">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PixelPick Logo" class="logo-img">
+                <span class="logo-star">✦</span>
+            </div>
+            
+            <h1 class="headline">
+                <span class="headline-line">Descubre tu próximo</span>
+                <span class="headline-line gradient-text">juego favorito</span>
+            </h1>
+            
+            <p class="description">
+                Recomendaciones personalizadas impulsadas por IA que entienden tus gustos y te ayudan a encontrar el juego perfecto para ti.
+            </p>
+            
+            <a href="{{ url_for('benefits') }}" class="cta-button">
+                Suscríbete ahora
+            </a>
+        </div>
+
+        <!-- Right Section - Visual Content -->
+        <div class="right-section">
+            <!-- Galaxy Background Elements -->
+            <div class="galaxy-shape shape-1"></div>
+            <div class="galaxy-shape shape-2"></div>
+            <div class="galaxy-shape shape-3"></div>
+            <div class="galaxy-shape shape-4"></div>
+            <div class="galaxy-shape shape-5"></div>
+            
+            <!-- Floating Orbs -->
+            <div class="floating-orb orb-1"></div>
+            <div class="floating-orb orb-2"></div>
+            <div class="floating-orb orb-3"></div>
+            
+            <!-- Glassmorphism Card with Purple 3D Background -->
+            <div class="glassmorphism-container">
+                <!-- 3D Purple Swirl Background -->
+                <div class="purple-swirl-3d">
+                    <div class="swirl-layer layer-1"></div>
+                    <div class="swirl-layer layer-2"></div>
+                    <div class="swirl-layer layer-3"></div>
+                </div>
+                
+                <!-- Glassmorphism Card -->
+                <div class="glass-card">
+                    <div class="glass-card-content">
+                        <div class="card-header">
+                            <span class="card-title">PIXELPICK</span>
+                            <span class="card-star">✦</span>
+                        </div>
+                        <div class="card-gaming-elements">
+                            <div class="game-icon icon-1">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2z"/>
+                                    <circle cx="7" cy="12" r="1.5"/>
+                                    <circle cx="17" cy="12" r="1.5"/>
+                                    <rect x="10" y="10" width="4" height="4" rx="1"/>
+                                </svg>
+                            </div>
+                            <div class="game-icon icon-2">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="M2 17l10 5 10-5"/>
+                                    <path d="M2 12l10 5 10-5"/>
+                                </svg>
+                            </div>
+                            <div class="game-icon icon-3">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 6v6l4 2"/>
+                                </svg>
+                            </div>
+                            <div class="game-icon icon-4">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <span class="stat-value">1,234</span>
+                                <span class="stat-label">Juegos</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">98%</span>
+                                <span class="stat-label">IA Match</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+

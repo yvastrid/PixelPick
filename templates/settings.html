@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración - PixelPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+</head>
+<body class="settings-body">
+    <!-- Header -->
+    <header class="settings-header">
+        <div class="header-left">
+            <a href="{{ url_for('welcome') }}" class="nav-link">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span>Inicio</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="header-icon search-icon" id="searchButton" aria-label="Buscar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+            </button>
+            <button class="header-icon profile-icon" id="profileButton" aria-label="Perfil">
+                <div class="profile-avatar-small">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <span class="profile-status"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="settings-main">
+        <div class="settings-container">
+            <!-- Title -->
+            <h1 class="settings-title">Configuración</h1>
+
+            <!-- Tabs -->
+            <div class="settings-tabs">
+                <button class="tab-button active" data-tab="account">
+                    <span>Cuenta</span>
+                </button>
+                <button class="tab-button" data-tab="payment">
+                    <span>Pago</span>
+                </button>
+            </div>
+
+            <div class="tab-separator"></div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Account Tab -->
+                <div class="tab-pane active" id="account-tab">
+                    <!-- Your Profile Section -->
+                    <div class="settings-section">
+                        <h2 class="section-title">Tu Perfil</h2>
+                        <p class="section-description">Elige cómo te muestras como jugador en PixelPick.</p>
+                        
+                        <div class="profile-form-container">
+                            <div class="form-fields">
+                                <div class="form-group">
+                                    <label for="firstName" class="form-label">Nombre</label>
+                                    <input type="text" id="firstName" name="firstName" class="form-input" value="Astrid" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="lastName" class="form-label">Apellido</label>
+                                    <input type="text" id="lastName" name="lastName" class="form-input" value="Marquez" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Emails Section -->
+                    <div class="settings-section">
+                        <div class="section-header">
+                            <div>
+                                <h2 class="section-title">Correo Electrónico</h2>
+                                
+                            </div>
+                        </div>
+                        
+                        <div class="emails-list" id="emailsList">
+                            <div class="email-item">
+                                <div class="email-info">
+                                    <div class="email-address">cheesekimbapastrid@gmail.com</div>
+                                    <div class="email-description">Este correo está asociado a tu cuenta.</div>
+                                </div>
+                                <div class="email-badge primary-badge">Principal</div>
+                                <button class="email-menu-button" aria-label="Opciones">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="1"/>
+                                        <circle cx="19" cy="12" r="1"/>
+                                        <circle cx="5" cy="12" r="1"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delete Account Section -->
+                    <div class="settings-section danger-section">
+                        <h2 class="section-title">Eliminar Cuenta</h2>
+                        <p class="section-description">Si ya no deseas usar PixelPick, puedes eliminar permanentemente tu cuenta.</p>
+                        <button class="delete-account-button" id="deleteAccountButton">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            <span>Eliminar Mi Cuenta</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Tab -->
+                <div class="tab-pane" id="payment-tab">
+                    <div class="settings-section">
+                        <h2 class="section-title">Pago</h2>
+                        <p class="section-description">Gestiona tu método de pago y suscripción.</p>
+                        <p style="color: rgba(255, 255, 255, 0.5); margin-top: 20px;">Contenido próximamente disponible...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Profile Dropdown -->
+    <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown-content">
+            <div class="profile-info">
+                <div class="profile-avatar-large">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div class="profile-details">
+                    <h3 class="profile-name">Astrid Marquez</h3>
+                    <p class="profile-email">cheesekimbapastrid@gmail.com</p>
+                </div>
+            </div>
+            <div class="profile-separator"></div>
+            <div class="profile-menu">
+                <a href="{{ url_for('profile') }}" class="profile-menu-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Mi Perfil</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="profile-menu-item active">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24-4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24 4.24"/>
+                    </svg>
+                    <span>Configuración</span>
+                </a>
+                <a href="#" class="profile-menu-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    <span>Suscripción</span>
+                </a>
+                <a href="#" class="profile-menu-item logout-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+</html>
+

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - PixelPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body class="login-body">
+    <!-- Animated Background Elements -->
+    <div class="background-stars"></div>
+    <div class="nebula-effect"></div>
+    <div class="floating-star star-1"></div>
+    <div class="floating-star star-2"></div>
+    <div class="floating-star star-3"></div>
+
+    <!-- Main Container -->
+    <div class="login-container">
+        <!-- Logo -->
+        <div class="login-logo">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PixelPick Logo">
+            </a>
+        </div>
+
+        <!-- Form Card -->
+        <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+                <h1 class="login-title">Bienvenido a PixelPick</h1>
+                <p class="login-subtitle">
+                    Tus credenciales se usan solo para autenticación. Todos los datos guardados se almacenan en tu base de datos.
+                </p>
+            </div>
+
+            <!-- Form -->
+            <form class="login-form" id="registerForm">
+                <!-- Name Fields -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <input type="text" id="firstName" name="firstName" placeholder="Nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="lastName" name="lastName" placeholder="Apellido" required>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <input type="email" id="email" name="email" placeholder="Correo electrónico" required>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group password-group">
+                    <input type="password" id="password" name="password" placeholder="Contraseña" required>
+                    <button type="button" class="password-toggle" id="passwordToggle">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Terms Checkbox -->
+                <div class="form-checkbox">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">
+                        Acepto los Términos de servicio y Políticas de privacidad de PixelPick Corporation
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="submit-button">
+                    <span>REGISTRARSE</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>
+

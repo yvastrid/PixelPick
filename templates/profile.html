@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - PixelPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+</head>
+<body class="profile-body">
+    <!-- Header -->
+    <header class="profile-header">
+        <div class="header-left">
+            <a href="{{ url_for('welcome') }}" class="nav-link active">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/>
+                    <rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                <span>Inicio</span>
+            </a>
+        </div>
+        <div class="header-right">
+            <button class="header-icon search-icon" id="searchButton" aria-label="Buscar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+            </button>
+            <button class="header-icon profile-icon" id="profileButton" aria-label="Perfil">
+                <div class="profile-avatar-small">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <span class="profile-status"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Profile Section -->
+    <section class="profile-section">
+        <div class="profile-container">
+            <!-- Profile Picture -->
+            <div class="profile-picture-large">
+                <div class="profile-avatar-gradient">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="profile-info-section">
+                <h1 class="profile-name-large">Astrid Marquez</h1>
+                <div class="profile-joined">
+                    <svg class="calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span>Se unió en octubre de 2025</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">0</span>
+                        <span class="stat-label">Completados</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">Jugando</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Games Section -->
+    <section class="recent-games-section">
+        <div class="section-container">
+            <h2 class="section-title">Juegos Recientes</h2>
+            
+            <div class="games-grid" id="gamesGrid">
+                <!-- Game cards will be dynamically loaded or shown here -->
+                <div class="game-card-recent">
+                    <div class="game-image-recent">
+                        <div class="game-placeholder-recent game-1">
+                            <span>GAME</span>
+                        </div>
+                    </div>
+                    <div class="game-info-recent">
+                        <h3 class="game-title-recent">Mario Kart</h3>
+                        <p class="game-time-recent">Última vez: Hace 2 horas</p>
+                    </div>
+                </div>
+
+                <div class="game-card-recent">
+                    <div class="game-image-recent">
+                        <div class="game-placeholder-recent game-2">
+                            <span>GAME</span>
+                        </div>
+                    </div>
+                    <div class="game-info-recent">
+                        <h3 class="game-title-recent">Roblox</h3>
+                        <p class="game-time-recent">Última vez: Hace 1 día</p>
+                    </div>
+                </div>
+
+                <div class="game-card-recent">
+                    <div class="game-image-recent">
+                        <div class="game-placeholder-recent game-3">
+                            <span>GAME</span>
+                        </div>
+                    </div>
+                    <div class="game-info-recent">
+                        <h3 class="game-title-recent">Call of Duty</h3>
+                        <p class="game-time-recent">Última vez: Hace 3 días</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State (hidden by default) -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                        <line x1="15" y1="3" x2="15" y2="21"/>
+                        <line x1="3" y1="9" x2="21" y2="9"/>
+                        <line x1="3" y1="15" x2="21" y2="15"/>
+                    </svg>
+                    <span class="empty-badge">0</span>
+                </div>
+                <h3 class="empty-title">Nada aquí, aún</h3>
+                <p class="empty-description">Astrid Marquez no ha jugado juegos recientemente.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Dropdown (same as welcome page) -->
+    <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown-content">
+            <div class="profile-info">
+                <div class="profile-avatar-large">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                <div class="profile-details">
+                    <h3 class="profile-name">Astrid Marquez</h3>
+                    <p class="profile-email">cheesekimbapastrid@gmail.com</p>
+                </div>
+            </div>
+            <div class="profile-separator"></div>
+            <div class="profile-menu">
+                <a href="{{ url_for('profile') }}" class="profile-menu-item active">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Mi Perfil</span>
+                </a>
+                <a href="{{ url_for('settings') }}" class="profile-menu-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24-4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24 4.24"/>
+                    </svg>
+                    <span>Configuración</span>
+                </a>
+                <a href="#" class="profile-menu-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                    </svg>
+                    <span>Suscripción</span>
+                </a>
+                <a href="#" class="profile-menu-item logout-item">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+</body>
+</html>
+

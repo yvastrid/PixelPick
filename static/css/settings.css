@@ -1,0 +1,717 @@
+/* Settings Page Styles */
+
+.settings-body {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0a0a1a 0%, #0a1a2e 50%, #1a2e3a 100%);
+    color: var(--text-white);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Header (same as profile page) */
+.settings-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 10, 26, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+    padding: 16px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+
+.nav-link:hover {
+    color: var(--text-white);
+    background: rgba(0, 212, 255, 0.1);
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.header-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.header-icon:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--accent-cyan);
+    color: var(--text-white);
+}
+
+.profile-avatar-small {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(255, 0, 100, 0.8) 0%, rgba(0, 212, 255, 0.8) 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+}
+
+.profile-avatar-small svg {
+    width: 20px;
+    height: 20px;
+}
+
+.profile-status {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background: #00ff88;
+    border: 2px solid rgba(10, 10, 26, 0.8);
+    border-radius: 50%;
+}
+
+/* Main Content */
+.settings-main {
+    padding: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.settings-container {
+    width: 100%;
+}
+
+.settings-title {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 32px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Tabs */
+.settings-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 24px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.tab-button:hover {
+    color: var(--text-white);
+}
+
+.tab-button.active {
+    color: var(--text-white);
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--accent-cyan);
+}
+
+.tab-separator {
+    height: 1px;
+    background: rgba(0, 212, 255, 0.2);
+    margin-bottom: 32px;
+}
+
+/* Tab Content */
+.tab-content {
+    min-height: 400px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Settings Sections */
+.settings-section {
+    margin-bottom: 48px;
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-white);
+    margin-bottom: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.section-description {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+.section-header .section-title {
+    margin-bottom: 8px;
+}
+
+/* Profile Form */
+.profile-form-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    flex: 1;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-white);
+}
+
+.form-input {
+    padding: 12px 16px;
+    background: rgba(10, 10, 26, 0.6);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 8px;
+    color: var(--text-white);
+    font-size: 15px;
+    font-family: inherit;
+    transition: all 0.3s;
+    outline: none;
+}
+
+.form-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.form-input:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+    background: rgba(10, 10, 26, 0.8);
+}
+
+.username-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.username-prefix {
+    position: absolute;
+    left: 16px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 15px;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.username-input {
+    padding-left: 32px;
+}
+
+.form-textarea {
+    padding: 12px 16px;
+    background: rgba(10, 10, 26, 0.6);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 8px;
+    color: var(--text-white);
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    transition: all 0.3s;
+    outline: none;
+    min-height: 100px;
+}
+
+.form-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.form-textarea:focus {
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+    background: rgba(10, 10, 26, 0.8);
+}
+
+/* Profile Picture */
+.profile-picture-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.profile-picture-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-picture-preview {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.profile-avatar-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 0, 100, 0.8) 0%, rgba(0, 212, 255, 0.8) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    border: 3px solid rgba(0, 212, 255, 0.3);
+}
+
+.profile-avatar-large svg {
+    width: 60px;
+    height: 60px;
+}
+
+.upload-button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 212, 255, 0.9);
+    border: 3px solid rgba(10, 10, 26, 0.8);
+    color: var(--text-white);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.upload-button:hover {
+    background: var(--accent-cyan);
+    transform: scale(1.1);
+}
+
+.upload-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Emails Section */
+.add-email-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: rgba(0, 212, 255, 0.1);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 8px;
+    color: var(--accent-cyan);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.add-email-button:hover {
+    background: rgba(0, 212, 255, 0.2);
+    border-color: var(--accent-cyan);
+}
+
+.add-email-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+.emails-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.email-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(26, 26, 46, 0.6);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 12px;
+    transition: all 0.3s;
+}
+
+.email-item:hover {
+    background: rgba(26, 26, 46, 0.8);
+    border-color: rgba(0, 212, 255, 0.4);
+}
+
+.email-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.email-address {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-white);
+}
+
+.email-description {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.email-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.primary-badge {
+    background: rgba(0, 212, 255, 0.2);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.email-menu-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.email-menu-button:hover {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--accent-cyan);
+}
+
+.email-menu-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Delete Account Section */
+.danger-section {
+    padding-top: 32px;
+    border-top: 1px solid rgba(255, 100, 100, 0.2);
+}
+
+.danger-section .section-title {
+    color: rgba(255, 100, 100, 0.9);
+}
+
+.danger-section .section-description {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.delete-account-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: rgba(255, 100, 100, 0.2);
+    border: 1px solid rgba(255, 100, 100, 0.4);
+    border-radius: 8px;
+    color: #ff6464;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+    margin-top: 16px;
+}
+
+.delete-account-button:hover {
+    background: rgba(255, 100, 100, 0.3);
+    border-color: #ff6464;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 100, 100, 0.3);
+}
+
+.delete-account-button svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Profile Dropdown (same styles as profile page) */
+.profile-dropdown {
+    position: fixed;
+    top: 70px;
+    right: 40px;
+    z-index: 999;
+    display: none;
+    animation: dropdownFadeIn 0.3s ease;
+}
+
+.profile-dropdown.active {
+    display: block;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profile-dropdown-content {
+    width: 280px;
+    background: rgba(26, 26, 46, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.profile-info {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.profile-avatar-large {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 0, 100, 0.8) 0%, rgba(0, 212, 255, 0.8) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-white);
+    border: 2px solid rgba(0, 212, 255, 0.3);
+}
+
+.profile-avatar-large svg {
+    width: 32px;
+    height: 32px;
+}
+
+.profile-details {
+    text-align: center;
+    width: 100%;
+}
+
+.profile-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-white);
+    margin: 0 0 4px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.profile-email {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0;
+    word-break: break-word;
+}
+
+.profile-separator {
+    height: 1px;
+    background: rgba(0, 212, 255, 0.2);
+    margin: 0 16px;
+}
+
+.profile-menu {
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    color: var(--text-white);
+    text-decoration: none;
+    border-radius: 10px;
+    transition: all 0.3s;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.profile-menu-item:hover {
+    background: rgba(0, 212, 255, 0.1);
+    color: var(--accent-cyan);
+    transform: translateX(4px);
+}
+
+.profile-menu-item.active {
+    background: rgba(0, 212, 255, 0.15);
+    color: var(--accent-cyan);
+}
+
+.profile-menu-item.logout-item {
+    color: rgba(255, 100, 100, 0.9);
+}
+
+.profile-menu-item.logout-item:hover {
+    background: rgba(255, 100, 100, 0.1);
+    color: #ff6464;
+}
+
+.menu-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-header {
+        padding: 12px 20px;
+    }
+
+    .header-left {
+        gap: 12px;
+    }
+
+    .nav-link span {
+        display: none;
+    }
+
+    .settings-main {
+        padding: 30px 20px;
+    }
+
+    .settings-title {
+        font-size: 36px;
+    }
+
+    .profile-form-container {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .section-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .profile-dropdown {
+        top: 60px;
+        right: 20px;
+    }
+
+    .profile-dropdown-content {
+        width: 260px;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-title {
+        font-size: 28px;
+    }
+
+    .tab-button {
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+}
+
