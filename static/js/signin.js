@@ -41,11 +41,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Here you would typically send the data to your backend
-            console.log('Sign in data:', formData);
-            
-            // Redirect to welcome page
-            window.location.href = '/welcome';
+            // Enviar datos al backend
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Login exitoso, redirigir a welcome
+                    window.location.href = '/welcome';
+                } else {
+                    alert(data.error || 'Error al iniciar sesión');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al conectar con el servidor');
+            });
         });
     }
 

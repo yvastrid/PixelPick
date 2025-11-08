@@ -206,7 +206,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const text = this.querySelector('span').textContent;
                 
                 if (text === 'Cerrar Sesión') {
-                    window.location.href = '/signin';
+                    e.preventDefault();
+                    logout();
                 } else if (text === 'Mi Perfil') {
                     window.location.href = '/profile';
                 } else if (text === 'Configuración') {
@@ -221,5 +222,75 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Cargar datos del usuario
+    loadUserData();
+    
+    // Cargar recomendaciones
+    loadRecommendations();
 });
+
+// Función para cargar datos del usuario
+function loadUserData() {
+    fetch('/api/user')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const user = data.user;
+                
+                // Actualizar información en el dropdown
+                const nameElements = document.querySelectorAll('.profile-name');
+                const emailElements = document.querySelectorAll('.profile-email');
+                
+                nameElements.forEach(el => {
+                    el.textContent = `${user.first_name} ${user.last_name}`;
+                });
+                
+                emailElements.forEach(el => {
+                    el.textContent = user.email;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar datos del usuario:', error);
+        });
+}
+
+// Función para cargar recomendaciones
+function loadRecommendations() {
+    fetch('/api/games/recommendations')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.recommendations) {
+                // Actualizar las tarjetas de recomendaciones si es necesario
+                // Por ahora, las recomendaciones se muestran estáticamente en el HTML
+                console.log('Recomendaciones cargadas:', data.recommendations);
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar recomendaciones:', error);
+        });
+}
+
+// Función para cerrar sesión
+function logout() {
+    fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/signin';
+        } else {
+            alert('Error al cerrar sesión');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        window.location.href = '/signin';
+    });
+}
 

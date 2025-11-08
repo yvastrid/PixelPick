@@ -1,0 +1,105 @@
+═══════════════════════════════════════════════════════════════
+  COMANDOS RÁPIDOS PARA CONFIGURAR POSTGRESQL
+═══════════════════════════════════════════════════════════════
+
+1. GENERAR SECRET_KEY
+───────────────────────────────────────────────────────────────
+
+# Opción 1: Usar el script incluido
+python3 script_generar_secret_key.py
+
+# Opción 2: Comando directo
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Opción 3: Alternativa
+python3 -c "import os; print(os.urandom(32).hex())"
+
+
+2. VERIFICAR CONFIGURACIÓN LOCAL
+───────────────────────────────────────────────────────────────
+
+# Verificar que las dependencias estén instaladas
+pip install -r requirements.txt
+
+# Probar la aplicación localmente
+python app.py
+
+
+3. HEROKU (Si usas Heroku)
+───────────────────────────────────────────────────────────────
+
+# Iniciar sesión
+heroku login
+
+# Crear aplicación (si no existe)
+heroku create pixelpick-tu-nombre
+
+# Agregar PostgreSQL
+heroku addons:create heroku-postgresql:mini
+
+# Configurar SECRET_KEY (reemplaza TU_CLAVE)
+heroku config:set SECRET_KEY=TU_CLAVE_GENERADA
+
+# Ver variables de entorno
+heroku config
+
+# Ver logs
+heroku logs --tail
+
+# Desplegar
+git push heroku main
+
+
+4. VERIFICAR BASE DE DATOS
+───────────────────────────────────────────────────────────────
+
+# En Heroku: Conectar a PostgreSQL
+heroku pg:psql
+
+# Ver tablas creadas
+\dt
+
+# Ver usuarios
+SELECT * FROM users;
+
+# Salir
+\q
+
+
+5. GIT (Preparar para despliegue)
+───────────────────────────────────────────────────────────────
+
+# Agregar todos los archivos
+git add .
+
+# Hacer commit
+git commit -m "Configure PostgreSQL for production"
+
+# Subir a GitHub
+git push origin main
+
+
+═══════════════════════════════════════════════════════════════
+  VARIABLES DE ENTORNO NECESARIAS
+═══════════════════════════════════════════════════════════════
+
+DATABASE_URL=postgresql://usuario:contraseña@host:puerto/db
+SECRET_KEY=tu-clave-secreta-generada
+
+═══════════════════════════════════════════════════════════════
+  NOTAS IMPORTANTES
+═══════════════════════════════════════════════════════════════
+
+✅ DATABASE_URL se configura automáticamente en:
+   - Render: Al crear la base de datos PostgreSQL
+   - Railway: Al agregar el servicio PostgreSQL
+   - Heroku: Al agregar el addon heroku-postgresql
+
+✅ SECRET_KEY debes generarla tú y configurarla manualmente
+
+✅ La aplicación crea las tablas automáticamente al iniciar
+
+✅ Usa la "Internal Database URL" en Render (no la External)
+
+═══════════════════════════════════════════════════════════════
+

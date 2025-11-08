@@ -1,0 +1,24 @@
+📝 COMANDOS PARA SUBIR A GITHUB
+
+Después de crear tu repositorio en GitHub, ejecuta estos comandos:
+
+1. Conecta tu repositorio local con GitHub:
+   (Reemplaza TU_USUARIO con tu nombre de usuario de GitHub)
+
+   git remote add origin https://github.com/TU_USUARIO/PixelPick.git
+
+2. Sube tu código:
+
+   git push -u origin main
+
+NOTA: Si te pide usuario y contraseña:
+- Usuario: Tu nombre de usuario de GitHub
+- Contraseña: Usa un Personal Access Token (no tu contraseña normal)
+
+Para crear un token:
+1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+2. Generate new token (classic)
+3. Selecciona "repo" 
+4. Generate token
+5. Copia el token y úsalo como contraseña
+

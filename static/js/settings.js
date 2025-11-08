@@ -61,6 +61,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+    // Cargar datos del usuario
+    loadUserData();
+
+    // Guardar cambios del perfil
+    const firstNameInput = document.getElementById('firstName');
+    const lastNameInput = document.getElementById('lastName');
+    
+    if (firstNameInput && lastNameInput) {
+        // Guardar cambios cuando se pierde el foco
+        [firstNameInput, lastNameInput].forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim() !== '') {
+                    saveProfileChanges();
+                }
+            });
+        });
+    }
+
     // Delete Account Button
     const deleteAccountButton = document.getElementById('deleteAccountButton');
     if (deleteAccountButton) {
@@ -71,9 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (confirm(confirmMessage)) {
                 const userInput = prompt(secondConfirm);
                 if (userInput === 'ELIMINAR') {
-                    // Here you would handle account deletion
-                    alert('Cuenta eliminada exitosamente');
-                    // window.location.href = '/';
+                    deleteAccount();
                 } else if (userInput) {
                     alert('Confirmación incorrecta. La eliminación de cuenta ha sido cancelada.');
                 }
@@ -108,11 +124,129 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (text === 'Cerrar Sesión') {
                     e.preventDefault();
-                    window.location.href = '/signin';
+                    logout();
                 }
             });
         });
     }
 
 });
+
+// Función para cargar datos del usuario
+function loadUserData() {
+    fetch('/api/user')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const user = data.user;
+                
+                // Actualizar campos del formulario
+                const firstNameInput = document.getElementById('firstName');
+                const lastNameInput = document.getElementById('lastName');
+                
+                if (firstNameInput) firstNameInput.value = user.first_name || '';
+                if (lastNameInput) lastNameInput.value = user.last_name || '';
+                
+                // Actualizar información en el dropdown
+                const nameElements = document.querySelectorAll('.profile-name');
+                const emailElements = document.querySelectorAll('.profile-email');
+                
+                nameElements.forEach(el => {
+                    el.textContent = `${user.first_name} ${user.last_name}`;
+                });
+                
+                emailElements.forEach(el => {
+                    el.textContent = user.email;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar datos del usuario:', error);
+        });
+}
+
+// Función para guardar cambios del perfil
+function saveProfileChanges() {
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    
+    if (!firstName || !lastName) {
+        alert('El nombre y apellido son requeridos');
+        return;
+    }
+    
+    fetch('/api/profile/update', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            firstName: firstName,
+            lastName: lastName
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Actualizar nombre en el dropdown también
+            const nameElements = document.querySelectorAll('.profile-name');
+            nameElements.forEach(el => {
+                el.textContent = `${firstName} ${lastName}`;
+            });
+            // Mostrar mensaje de éxito (opcional)
+            console.log('Perfil actualizado exitosamente');
+        } else {
+            alert(data.error || 'Error al actualizar perfil');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al conectar con el servidor');
+    });
+}
+
+// Función para eliminar cuenta
+function deleteAccount() {
+    fetch('/api/profile/delete', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Cuenta eliminada exitosamente');
+            window.location.href = '/';
+        } else {
+            alert(data.error || 'Error al eliminar cuenta');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al conectar con el servidor');
+    });
+}
+
+// Función para cerrar sesión
+function logout() {
+    fetch('/api/logout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/signin';
+        } else {
+            alert('Error al cerrar sesión');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        window.location.href = '/signin';
+    });
+}
 
