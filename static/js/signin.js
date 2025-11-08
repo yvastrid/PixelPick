@@ -55,15 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Login exitoso, redirigir a welcome
                     window.location.href = '/welcome';
                 } else {
-                    if (data.requires_verification) {
-                        // Mostrar opción de reenviar verificación
-                        const resend = confirm(data.error + '\n\n¿Deseas que reenviemos el correo de verificación?');
-                        if (resend) {
-                            resendVerificationEmail(data.email);
-                        }
-                    } else {
-                        alert(data.error || 'Error al iniciar sesión');
-                    }
+                    alert(data.error || 'Error al iniciar sesión');
                 }
             })
             .catch(error => {
@@ -72,30 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-});
-
-// Función para reenviar correo de verificación
-function resendVerificationEmail(email) {
-    fetch('/api/resend-verification', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: email })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert(data.message || 'Correo de verificación reenviado. Revisa tu bandeja de entrada.');
-        } else {
-            alert(data.error || 'Error al reenviar correo');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error al conectar con el servidor');
-    });
-}
 
     // Add input focus animations
     const inputs = document.querySelectorAll('.form-group input');

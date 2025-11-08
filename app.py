@@ -305,37 +305,21 @@ def register():
         user = User(
             first_name=first_name,
             last_name=last_name,
-            email=email,
-            email_verified=False
+            email=email
         )
         user.set_password(password)
-        
-        # Generar token de verificación
-        verification_token = secrets.token_urlsafe(32)
-        user.email_verification_token = verification_token
-        user.email_verification_sent_at = datetime.utcnow()
         
         db.session.add(user)
         db.session.commit()
         logger.info(f"Usuario registrado exitosamente: {email}")
         
-        # Enviar email de verificación en segundo plano (no bloquea la respuesta)
-        try:
-            send_verification_email(user, verification_token)
-            logger.info(f"Proceso de envío de email iniciado para: {email}")
-        except Exception as email_error:
-            logger.error(f"Error al iniciar proceso de envío de email: {str(email_error)}")
-            logger.error(traceback.format_exc())
-            # Continuar aunque falle - el usuario puede solicitar reenvío después
-        
-        # NO iniciar sesión automáticamente - el usuario debe verificar su email primero
-        # login_user(user, remember=True)
+        # Iniciar sesión automáticamente después del registro
+        login_user(user, remember=True)
         
         return jsonify({
             'success': True,
-            'message': 'Usuario registrado exitosamente. Por favor, verifica tu correo electrónico para iniciar sesión.',
-            'email_sent': True,
-            'requires_verification': True
+            'message': 'Usuario registrado exitosamente',
+            'user': user.to_dict()
         }), 201
         
     except Exception as e:
@@ -366,15 +350,6 @@ def login_api():
         
         if not user or not user.check_password(password):
             return jsonify({'error': 'Email o contraseña incorrectos'}), 401
-        
-        # Verificar si el email está verificado
-        email_verified = getattr(user, 'email_verified', False)
-        if not email_verified:
-            return jsonify({
-                'error': 'Por favor, verifica tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.',
-                'requires_verification': True,
-                'email': user.email
-            }), 403
         
         # Iniciar sesión
         login_user(user, remember=True)

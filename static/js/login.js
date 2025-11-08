@@ -62,15 +62,8 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    if (data.requires_verification) {
-                        // Mostrar mensaje de verificación
-                        alert('¡Registro exitoso! Por favor, verifica tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.');
-                        // Redirigir a la página de inicio de sesión
-                        window.location.href = '/signin';
-                    } else {
-                        // Registro exitoso sin verificación (modo legacy)
-                        window.location.href = '/welcome';
-                    }
+                    // Registro exitoso, redirigir a welcome
+                    window.location.href = '/welcome';
                 } else {
                     alert(data.error || 'Error al registrar usuario');
                 }
