@@ -158,6 +158,12 @@ function loadUserData() {
                 emailElements.forEach(el => {
                     el.textContent = user.email;
                 });
+                
+                // Actualizar email en la sección de emails
+                const emailAddressElement = document.getElementById('userEmailAddress');
+                if (emailAddressElement) {
+                    emailAddressElement.textContent = user.email;
+                }
             }
         })
         .catch(error => {
