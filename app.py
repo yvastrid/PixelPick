@@ -340,9 +340,15 @@ def update_profile():
                 # Si las columnas no existen, intentar agregarlas
                 logger.warning("Las columnas de cambio de nombre no existen, intentando agregarlas...")
                 try:
-                    from sqlalchemy import text
-                    db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS name_change_count INTEGER DEFAULT 0"))
-                    db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name_change_date TIMESTAMP"))
+                    from sqlalchemy import text, inspect
+                    inspector = inspect(db.engine)
+                    columns = [col['name'] for col in inspector.get_columns('users')]
+                    
+                    if 'name_change_count' not in columns:
+                        db.session.execute(text("ALTER TABLE users ADD COLUMN name_change_count INTEGER DEFAULT 0"))
+                    if 'last_name_change_date' not in columns:
+                        db.session.execute(text("ALTER TABLE users ADD COLUMN last_name_change_date TIMESTAMP"))
+                    
                     db.session.commit()
                     # Recargar el usuario
                     db.session.refresh(user)
@@ -350,6 +356,7 @@ def update_profile():
                     user.last_name_change_date = datetime.utcnow()
                 except Exception as e:
                     logger.error(f"Error al agregar columnas: {str(e)}")
+                    db.session.rollback()
                     # Continuar sin las columnas (modo compatible)
         
         user.updated_at = datetime.utcnow()
