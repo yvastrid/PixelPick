@@ -51,7 +51,8 @@ class User(UserMixin, db.Model):
             'email': self.email,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'name_change_count': name_change_count,
-            'last_name_change_date': last_name_change_date.isoformat() if last_name_change_date else None
+            'last_name_change_date': last_name_change_date.isoformat() if last_name_change_date else None,
+            'email_verified': getattr(self, 'email_verified', False)
         }
     
     def can_change_name(self):
