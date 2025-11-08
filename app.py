@@ -161,23 +161,40 @@ def send_verification_email(user, token):
     def _send_email():
         """Función interna que envía el email en un thread separado"""
         try:
+            logger.info("=" * 50)
+            logger.info("INICIANDO ENVÍO DE EMAIL EN THREAD")
+            logger.info("=" * 50)
+            
             # Verificar configuración de email
             mail_server = app.config.get('MAIL_SERVER')
+            mail_port = app.config.get('MAIL_PORT')
             mail_username = app.config.get('MAIL_USERNAME')
             mail_password = app.config.get('MAIL_PASSWORD')
+            mail_use_tls = app.config.get('MAIL_USE_TLS')
+            mail_default_sender = app.config.get('MAIL_DEFAULT_SENDER')
+            
+            logger.info(f"MAIL_SERVER: {mail_server}")
+            logger.info(f"MAIL_PORT: {mail_port}")
+            logger.info(f"MAIL_USERNAME: {mail_username}")
+            logger.info(f"MAIL_PASSWORD configurado: {'Sí' if mail_password else 'No'}")
+            logger.info(f"MAIL_USE_TLS: {mail_use_tls}")
+            logger.info(f"MAIL_DEFAULT_SENDER: {mail_default_sender}")
             
             if not mail_server or not mail_username or not mail_password:
-                logger.error("Configuración de email incompleta. Variables requeridas: MAIL_SERVER, MAIL_USERNAME, MAIL_PASSWORD")
+                logger.error("❌ Configuración de email incompleta!")
+                logger.error(f"MAIL_SERVER: {mail_server}")
+                logger.error(f"MAIL_USERNAME: {mail_username}")
+                logger.error(f"MAIL_PASSWORD: {'Configurado' if mail_password else 'NO CONFIGURADO'}")
                 return False
             
-            logger.info(f"Intentando enviar email de verificación a: {user.email}")
-            logger.info(f"Configuración SMTP: Server={mail_server}, Username={mail_username[:10]}...")
+            logger.info(f"✅ Configuración de email OK. Intentando enviar a: {user.email}")
             
             verification_url = f"{app.config.get('APP_URL', 'https://pixelpick-akp2.onrender.com')}/verify-email?token={token}"
             
             msg = Message(
                 subject='Verifica tu correo electrónico - PixelPick',
                 recipients=[user.email],
+                sender=mail_default_sender,
                 html=f"""
                 <!DOCTYPE html>
                 <html>
@@ -218,22 +235,34 @@ def send_verification_email(user, token):
                 """
             )
             
-            # Enviar email con timeout
-            with app.app_context():
-                mail.send(msg)
+            logger.info(f"📧 Mensaje creado. Intentando conectar a SMTP...")
             
-            logger.info(f"Email de verificación enviado exitosamente a: {user.email}")
-            return True
+            # Enviar email con app context
+            with app.app_context():
+                try:
+                    mail.send(msg)
+                    logger.info(f"✅ Email de verificación enviado exitosamente a: {user.email}")
+                    return True
+                except Exception as smtp_error:
+                    logger.error(f"❌ Error SMTP al enviar email: {str(smtp_error)}")
+                    logger.error(f"Tipo de error: {type(smtp_error).__name__}")
+                    raise
+            
         except Exception as e:
-            logger.error(f"Error al enviar email a {user.email}: {str(e)}")
+            logger.error("=" * 50)
+            logger.error("ERROR AL ENVIAR EMAIL")
+            logger.error("=" * 50)
+            logger.error(f"Error: {str(e)}")
+            logger.error(f"Tipo: {type(e).__name__}")
             logger.error(traceback.format_exc())
             return False
     
     # Ejecutar en thread separado para no bloquear la respuesta
-    thread = threading.Thread(target=_send_email)
+    logger.info(f"🚀 Iniciando thread para enviar email a: {user.email}")
+    thread = threading.Thread(target=_send_email, name=f"EmailThread-{user.email}")
     thread.daemon = True
     thread.start()
-    logger.info(f"Thread de envío de email iniciado para: {user.email}")
+    logger.info(f"✅ Thread de envío de email iniciado para: {user.email}")
     return True
 
 # ==================== API RUTAS - AUTENTICACIÓN ====================
@@ -784,11 +813,23 @@ def health_check():
         db_status = f'error: {str(e)}'
         db_url_display = app.config.get('SQLALCHEMY_DATABASE_URI', 'Not configured')
     
+    # Verificar configuración de email
+    mail_config = {
+        'MAIL_SERVER': app.config.get('MAIL_SERVER'),
+        'MAIL_PORT': app.config.get('MAIL_PORT'),
+        'MAIL_USERNAME': app.config.get('MAIL_USERNAME'),
+        'MAIL_PASSWORD': 'Configurado' if app.config.get('MAIL_PASSWORD') else 'NO CONFIGURADO',
+        'MAIL_USE_TLS': app.config.get('MAIL_USE_TLS'),
+        'MAIL_DEFAULT_SENDER': app.config.get('MAIL_DEFAULT_SENDER'),
+        'APP_URL': app.config.get('APP_URL')
+    }
+    
     return jsonify({
         'status': 'ok',
         'database': db_status,
         'database_url': db_url_display,
-        'secret_key_configured': bool(app.config.get('SECRET_KEY') and app.config.get('SECRET_KEY') != 'dev-secret-key-change-in-production')
+        'secret_key_configured': bool(app.config.get('SECRET_KEY') and app.config.get('SECRET_KEY') != 'dev-secret-key-change-in-production'),
+        'email_config': mail_config
     }), 200
 
 if __name__ == '__main__':
