@@ -158,6 +158,9 @@ function loadUserData() {
                     emailAddressElement.textContent = user.email;
                 }
                 
+                // Actualizar estado de verificación de email
+                updateEmailVerificationStatus(user);
+                
                 // Actualizar información de cambios disponibles
                 updateNameChangeInfo(user);
             }
@@ -269,6 +272,100 @@ function saveProfileChanges() {
         if (saveButton) {
             saveButton.disabled = false;
             saveButton.innerHTML = '<span>Guardar Cambios</span>';
+        }
+    });
+}
+
+// Función para actualizar estado de verificación de email
+function updateEmailVerificationStatus(user) {
+    const emailDescription = document.getElementById('emailDescription');
+    const emailBadge = document.getElementById('emailBadge');
+    const verificationStatus = document.getElementById('emailVerificationStatus');
+    const verificationMessage = document.getElementById('verificationMessage');
+    const resendButton = document.getElementById('resendVerificationButton');
+    
+    const emailVerified = user.email_verified || false;
+    
+    if (emailVerified) {
+        if (emailDescription) {
+            emailDescription.textContent = 'Este correo está verificado y asociado a tu cuenta.';
+        }
+        if (emailBadge) {
+            emailBadge.textContent = 'Verificado';
+            emailBadge.className = 'email-badge primary-badge';
+        }
+        if (verificationStatus) {
+            verificationStatus.style.display = 'none';
+        }
+    } else {
+        if (emailDescription) {
+            emailDescription.textContent = 'Este correo no está verificado. Por favor, verifica tu correo para acceder a todas las funciones.';
+            emailDescription.style.color = 'rgba(255, 200, 100, 0.9)';
+        }
+        if (emailBadge) {
+            emailBadge.textContent = 'No Verificado';
+            emailBadge.style.background = 'rgba(255, 200, 100, 0.2)';
+            emailBadge.style.color = '#ffc864';
+            emailBadge.style.border = '1px solid rgba(255, 200, 100, 0.3)';
+        }
+        if (verificationStatus) {
+            verificationStatus.style.display = 'block';
+            verificationStatus.style.background = 'rgba(255, 200, 100, 0.1)';
+            verificationStatus.style.border = '1px solid rgba(255, 200, 100, 0.3)';
+        }
+        if (verificationMessage) {
+            verificationMessage.textContent = 'No has verificado tu correo electrónico. Revisa tu bandeja de entrada o solicita un nuevo correo de verificación.';
+            verificationMessage.style.color = 'rgba(255, 200, 100, 0.9)';
+        }
+        if (resendButton) {
+            resendButton.onclick = function() {
+                resendVerificationEmail(user.email);
+            };
+        }
+    }
+}
+
+// Función para reenviar correo de verificación
+function resendVerificationEmail(email) {
+    const resendButton = document.getElementById('resendVerificationButton');
+    
+    if (resendButton) {
+        resendButton.disabled = true;
+        resendButton.textContent = 'Enviando...';
+    }
+    
+    fetch('/api/resend-verification', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message || 'Correo de verificación reenviado. Revisa tu bandeja de entrada.', 'success');
+            if (resendButton) {
+                resendButton.textContent = 'Correo Enviado';
+                setTimeout(() => {
+                    resendButton.disabled = false;
+                    resendButton.textContent = 'Reenviar correo de verificación';
+                }, 60000); // Deshabilitar por 1 minuto
+            }
+        } else {
+            showMessage(data.error || 'Error al reenviar correo', 'error');
+            if (resendButton) {
+                resendButton.disabled = false;
+                resendButton.textContent = 'Reenviar correo de verificación';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error al conectar con el servidor', 'error');
+        if (resendButton) {
+            resendButton.disabled = false;
+            resendButton.textContent = 'Reenviar correo de verificación';
         }
     });
 }

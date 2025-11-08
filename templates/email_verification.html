@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Email - PixelPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body class="login-body">
+    <!-- Animated Background Elements -->
+    <div class="background-stars"></div>
+    <div class="nebula-effect"></div>
+    <div class="floating-star star-1"></div>
+    <div class="floating-star star-2"></div>
+    <div class="floating-star star-3"></div>
+
+    <!-- Main Container -->
+    <div class="login-container">
+        <!-- Logo -->
+        <div class="login-logo">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PixelPick Logo">
+            </a>
+        </div>
+
+        <!-- Verification Card -->
+        <div class="login-card">
+            {% if success %}
+            <!-- Success State -->
+            <div class="login-header">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 64px; height: 64px; color: #00d4ff; margin: 0 auto;">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <h1 class="login-title">¡Email Verificado!</h1>
+                <p class="login-subtitle">
+                    {{ message }}
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{{ url_for('signin') }}" class="submit-button" style="display: inline-block; text-decoration: none; padding: 14px 28px;">
+                    <span>INICIAR SESIÓN</span>
+                </a>
+            </div>
+            {% else %}
+            <!-- Error State -->
+            <div class="login-header">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 64px; height: 64px; color: #ff6464; margin: 0 auto;">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <h1 class="login-title">Error de Verificación</h1>
+                <p class="login-subtitle" style="color: rgba(255, 100, 100, 0.9);">
+                    {{ message }}
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{{ url_for('login') }}" class="submit-button" style="display: inline-block; text-decoration: none; padding: 14px 28px; background: rgba(0, 212, 255, 0.2); border: 1px solid rgba(0, 212, 255, 0.5);">
+                    <span>VOLVER AL REGISTRO</span>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
+

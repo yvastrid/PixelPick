@@ -31,4 +31,16 @@ class Config:
         'pool_pre_ping': True,
         'pool_recycle': 300,
     }
+    
+    # Configuración de email (Flask-Mail)
+    MAIL_SERVER = os.environ.get('MAIL_SERVER') or 'smtp.gmail.com'
+    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 587)
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    MAIL_USE_SSL = os.environ.get('MAIL_USE_SSL', 'false').lower() in ['true', 'on', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or MAIL_USERNAME
+    
+    # URL base de la aplicación (para links en emails)
+    APP_URL = os.environ.get('APP_URL') or 'https://pixelpick-akp2.onrender.com'
 

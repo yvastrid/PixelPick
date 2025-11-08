@@ -21,6 +21,11 @@ class User(UserMixin, db.Model):
     name_change_count = db.Column(db.Integer, default=0)  # Número de veces que ha cambiado el nombre
     last_name_change_date = db.Column(db.DateTime, nullable=True)  # Fecha del último cambio
     
+    # Campos para verificación de email
+    email_verified = db.Column(db.Boolean, default=False)  # Si el email está verificado
+    email_verification_token = db.Column(db.String(100), nullable=True, unique=True)  # Token para verificar email
+    email_verification_sent_at = db.Column(db.DateTime, nullable=True)  # Fecha en que se envió el email
+    
     # Relaciones
     user_games = db.relationship('UserGame', backref='user', lazy=True, cascade='all, delete-orphan')
     preferences = db.relationship('UserPreference', backref='user', lazy=True, cascade='all, delete-orphan')

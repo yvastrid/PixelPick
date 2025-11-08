@@ -1,11 +1,13 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_mail import Mail, Message
 from config import Config
 from models import db, User, Game, UserGame, UserPreference
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import logging
 import traceback
+import secrets
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +18,7 @@ app.config.from_object(Config)
 
 # Inicializar extensiones
 db.init_app(app)
+mail = Mail(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'signin'
@@ -58,6 +61,25 @@ def init_db():
                     db.session.execute(text("ALTER TABLE users ADD COLUMN last_name_change_date TIMESTAMP"))
                     db.session.commit()
                     logger.info("Columna last_name_change_date agregada exitosamente")
+                
+                # Agregar columnas de verificación de email
+                if 'email_verified' not in columns:
+                    logger.info("Agregando columna email_verified a la tabla users...")
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN email_verified BOOLEAN DEFAULT FALSE"))
+                    db.session.commit()
+                    logger.info("Columna email_verified agregada exitosamente")
+                
+                if 'email_verification_token' not in columns:
+                    logger.info("Agregando columna email_verification_token a la tabla users...")
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN email_verification_token VARCHAR(100)"))
+                    db.session.commit()
+                    logger.info("Columna email_verification_token agregada exitosamente")
+                
+                if 'email_verification_sent_at' not in columns:
+                    logger.info("Agregando columna email_verification_sent_at a la tabla users...")
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN email_verification_sent_at TIMESTAMP"))
+                    db.session.commit()
+                    logger.info("Columna email_verification_sent_at agregada exitosamente")
             except Exception as migration_error:
                 logger.warning(f"No se pudieron agregar las nuevas columnas (puede que ya existan): {str(migration_error)}")
                 db.session.rollback()
@@ -131,6 +153,62 @@ def profile():
 def settings():
     return render_template('settings.html')
 
+# ==================== FUNCIONES DE EMAIL ====================
+
+def send_verification_email(user, token):
+    """Envía email de verificación al usuario"""
+    try:
+        verification_url = f"{app.config.get('APP_URL', 'https://pixelpick-akp2.onrender.com')}/verify-email?token={token}"
+        
+        msg = Message(
+            subject='Verifica tu correo electrónico - PixelPick',
+            recipients=[user.email],
+            html=f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .header h1 {{ color: white; margin: 0; }}
+                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                    .button {{ display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                    .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✨ PixelPick ✨</h1>
+                    </div>
+                    <div class="content">
+                        <h2>¡Bienvenido a PixelPick, {user.first_name}!</h2>
+                        <p>Gracias por registrarte. Para completar tu registro, por favor verifica tu correo electrónico haciendo clic en el botón de abajo:</p>
+                        <div style="text-align: center;">
+                            <a href="{verification_url}" class="button">Verificar Mi Correo</a>
+                        </div>
+                        <p>O copia y pega este enlace en tu navegador:</p>
+                        <p style="word-break: break-all; color: #00d4ff;">{verification_url}</p>
+                        <p>Este enlace expirará en 24 horas.</p>
+                        <p>Si no creaste una cuenta en PixelPick, puedes ignorar este correo.</p>
+                    </div>
+                    <div class="footer">
+                        <p>© 2025 PixelPick. Todos los derechos reservados.</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+        )
+        
+        mail.send(msg)
+        return True
+    except Exception as e:
+        logger.error(f"Error al enviar email: {str(e)}")
+        raise
+
 # ==================== API RUTAS - AUTENTICACIÓN ====================
 
 @app.route('/api/register', methods=['POST'])
@@ -171,21 +249,36 @@ def register():
         user = User(
             first_name=first_name,
             last_name=last_name,
-            email=email
+            email=email,
+            email_verified=False
         )
         user.set_password(password)
+        
+        # Generar token de verificación
+        verification_token = secrets.token_urlsafe(32)
+        user.email_verification_token = verification_token
+        user.email_verification_sent_at = datetime.utcnow()
         
         db.session.add(user)
         db.session.commit()
         logger.info(f"Usuario registrado exitosamente: {email}")
         
-        # Iniciar sesión automáticamente
-        login_user(user, remember=True)
+        # Enviar email de verificación
+        try:
+            send_verification_email(user, verification_token)
+            logger.info(f"Email de verificación enviado a: {email}")
+        except Exception as email_error:
+            logger.error(f"Error al enviar email de verificación: {str(email_error)}")
+            # Continuar aunque falle el envío de email
+        
+        # NO iniciar sesión automáticamente - el usuario debe verificar su email primero
+        # login_user(user, remember=True)
         
         return jsonify({
             'success': True,
-            'message': 'Usuario registrado exitosamente',
-            'user': user.to_dict()
+            'message': 'Usuario registrado exitosamente. Por favor, verifica tu correo electrónico para iniciar sesión.',
+            'email_sent': True,
+            'requires_verification': True
         }), 201
         
     except Exception as e:
@@ -216,6 +309,15 @@ def login_api():
         
         if not user or not user.check_password(password):
             return jsonify({'error': 'Email o contraseña incorrectos'}), 401
+        
+        # Verificar si el email está verificado
+        email_verified = getattr(user, 'email_verified', False)
+        if not email_verified:
+            return jsonify({
+                'error': 'Por favor, verifica tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.',
+                'requires_verification': True,
+                'email': user.email
+            }), 403
         
         # Iniciar sesión
         login_user(user, remember=True)
@@ -498,6 +600,143 @@ def add_user_game():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Error al agregar juego: {str(e)}'}), 500
+
+# ==================== RUTAS DE VERIFICACIÓN DE EMAIL ====================
+
+@app.route('/verify-email')
+def verify_email():
+    """Página para verificar email con token"""
+    token = request.args.get('token')
+    
+    if not token:
+        return render_template('email_verification.html', 
+                             success=False, 
+                             message='Token de verificación no proporcionado')
+    
+    # Buscar usuario con el token
+    user = User.query.filter_by(email_verification_token=token).first()
+    
+    if not user:
+        return render_template('email_verification.html', 
+                             success=False, 
+                             message='Token de verificación inválido o expirado')
+    
+    # Verificar si el token no ha expirado (24 horas)
+    if user.email_verification_sent_at:
+        time_diff = datetime.utcnow() - user.email_verification_sent_at
+        if time_diff > timedelta(hours=24):
+            return render_template('email_verification.html', 
+                                 success=False, 
+                                 message='El token de verificación ha expirado. Por favor, solicita uno nuevo.')
+    
+    # Verificar el email
+    user.email_verified = True
+    user.email_verification_token = None  # Eliminar el token usado
+    db.session.commit()
+    
+    logger.info(f"Email verificado exitosamente para: {user.email}")
+    
+    return render_template('email_verification.html', 
+                         success=True, 
+                         message='¡Tu correo electrónico ha sido verificado exitosamente! Ya puedes iniciar sesión.')
+
+@app.route('/api/verify-email', methods=['POST'])
+def verify_email_api():
+    """API para verificar email con token"""
+    try:
+        data = request.get_json()
+        token = data.get('token') if data else request.args.get('token')
+        
+        if not token:
+            return jsonify({'error': 'Token de verificación no proporcionado'}), 400
+        
+        # Buscar usuario con el token
+        user = User.query.filter_by(email_verification_token=token).first()
+        
+        if not user:
+            return jsonify({'error': 'Token de verificación inválido o expirado'}), 400
+        
+        # Verificar si el token no ha expirado (24 horas)
+        if user.email_verification_sent_at:
+            time_diff = datetime.utcnow() - user.email_verification_sent_at
+            if time_diff > timedelta(hours=24):
+                return jsonify({'error': 'El token de verificación ha expirado. Por favor, solicita uno nuevo.'}), 400
+        
+        # Verificar el email
+        user.email_verified = True
+        user.email_verification_token = None
+        db.session.commit()
+        
+        logger.info(f"Email verificado exitosamente para: {user.email}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Correo electrónico verificado exitosamente'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al verificar email: {str(e)}")
+        return jsonify({'error': f'Error al verificar email: {str(e)}'}), 500
+
+@app.route('/api/resend-verification', methods=['POST'])
+def resend_verification():
+    """Reenviar email de verificación"""
+    try:
+        data = request.get_json()
+        email = data.get('email', '').strip().lower() if data else None
+        
+        if not email:
+            return jsonify({'error': 'Email es requerido'}), 400
+        
+        # Buscar usuario
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            # Por seguridad, no revelar si el email existe o no
+            return jsonify({
+                'success': True,
+                'message': 'Si el email existe y no está verificado, se enviará un nuevo correo de verificación.'
+            }), 200
+        
+        # Verificar si ya está verificado
+        email_verified = getattr(user, 'email_verified', False)
+        if email_verified:
+            return jsonify({'error': 'Este correo electrónico ya está verificado'}), 400
+        
+        # Verificar límite de reenvíos (máximo 1 por hora)
+        if user.email_verification_sent_at:
+            time_diff = datetime.utcnow() - user.email_verification_sent_at
+            if time_diff < timedelta(hours=1):
+                minutes_remaining = int((timedelta(hours=1) - time_diff).total_seconds() / 60)
+                return jsonify({
+                    'error': f'Debes esperar {minutes_remaining} minutos antes de solicitar otro correo de verificación'
+                }), 429
+        
+        # Generar nuevo token
+        verification_token = secrets.token_urlsafe(32)
+        user.email_verification_token = verification_token
+        user.email_verification_sent_at = datetime.utcnow()
+        db.session.commit()
+        
+        # Enviar email
+        try:
+            send_verification_email(user, verification_token)
+            logger.info(f"Email de verificación reenviado a: {email}")
+            return jsonify({
+                'success': True,
+                'message': 'Correo de verificación reenviado exitosamente. Revisa tu bandeja de entrada.'
+            }), 200
+        except Exception as email_error:
+            logger.error(f"Error al reenviar email: {str(email_error)}")
+            return jsonify({
+                'error': 'Error al enviar el correo de verificación. Por favor, intenta más tarde.'
+            }), 500
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al reenviar verificación: {str(e)}")
+        return jsonify({'error': f'Error al procesar la solicitud: {str(e)}'}), 500
 
 # Ruta de diagnóstico
 @app.route('/api/health', methods=['GET'])
