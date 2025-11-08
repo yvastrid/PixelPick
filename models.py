@@ -35,34 +35,43 @@ class User(UserMixin, db.Model):
     
     def to_dict(self):
         """Convierte el usuario a diccionario"""
+        # Usar getattr para manejar columnas que pueden no existir aún
+        name_change_count = getattr(self, 'name_change_count', None) or 0
+        last_name_change_date = getattr(self, 'last_name_change_date', None)
+        
         return {
             'id': self.id,
             'first_name': self.first_name,
             'last_name': self.last_name,
             'email': self.email,
             'created_at': self.created_at.isoformat() if self.created_at else None,
-            'name_change_count': self.name_change_count or 0,
-            'last_name_change_date': self.last_name_change_date.isoformat() if self.last_name_change_date else None
+            'name_change_count': name_change_count,
+            'last_name_change_date': last_name_change_date.isoformat() if last_name_change_date else None
         }
     
     def can_change_name(self):
         """Verifica si el usuario puede cambiar su nombre/apellido"""
+        # Usar getattr para manejar columnas que pueden no existir aún
+        name_change_count = getattr(self, 'name_change_count', None) or 0
+        last_name_change_date = getattr(self, 'last_name_change_date', None)
+        
         # Si no ha hecho cambios, puede cambiar
-        if self.name_change_count == 0:
+        if name_change_count == 0:
             return True, None
         
         # Si ya hizo 3 cambios, verificar si han pasado 60 días
-        if self.name_change_count >= 3:
-            if self.last_name_change_date:
-                days_since_last_change = (datetime.utcnow() - self.last_name_change_date).days
+        if name_change_count >= 3:
+            if last_name_change_date:
+                days_since_last_change = (datetime.utcnow() - last_name_change_date).days
                 if days_since_last_change < 60:
                     days_remaining = 60 - days_since_last_change
                     return False, f"Has excedido el límite de 3 cambios. Debes esperar {days_remaining} días más."
                 else:
                     # Han pasado 60 días, resetear contador
-                    self.name_change_count = 0
-                    self.last_name_change_date = None
-                    db.session.commit()
+                    if hasattr(self, 'name_change_count'):
+                        self.name_change_count = 0
+                        self.last_name_change_date = None
+                        db.session.commit()
                     return True, None
         
         # Si tiene menos de 3 cambios, puede cambiar

@@ -40,6 +40,27 @@ def init_db():
             logger.info(f"Database URL: {db_url_display}")
             db.create_all()
             logger.info("Tablas de base de datos creadas/verificadas exitosamente")
+            
+            # Intentar agregar nuevas columnas si no existen (migración manual)
+            try:
+                from sqlalchemy import text, inspect
+                inspector = inspect(db.engine)
+                columns = [col['name'] for col in inspector.get_columns('users')]
+                
+                if 'name_change_count' not in columns:
+                    logger.info("Agregando columna name_change_count a la tabla users...")
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN name_change_count INTEGER DEFAULT 0"))
+                    db.session.commit()
+                    logger.info("Columna name_change_count agregada exitosamente")
+                
+                if 'last_name_change_date' not in columns:
+                    logger.info("Agregando columna last_name_change_date a la tabla users...")
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN last_name_change_date TIMESTAMP"))
+                    db.session.commit()
+                    logger.info("Columna last_name_change_date agregada exitosamente")
+            except Exception as migration_error:
+                logger.warning(f"No se pudieron agregar las nuevas columnas (puede que ya existan): {str(migration_error)}")
+                db.session.rollback()
             # Crear algunos juegos de ejemplo si no existen
             if Game.query.count() == 0:
                 sample_games = [
@@ -284,7 +305,7 @@ def update_profile():
                 'success': True,
                 'message': 'No se realizaron cambios',
                 'user': user.to_dict(),
-                'changes_remaining': 3 - (user.name_change_count or 0)
+                'changes_remaining': 3 - (getattr(user, 'name_change_count', None) or 0)
             }), 200
         
         # Si hay cambios en nombre o apellido, verificar si puede cambiar
@@ -310,13 +331,32 @@ def update_profile():
         
         # Si cambió el nombre o apellido, incrementar contador y actualizar fecha
         if first_name_changed or last_name_changed:
-            user.name_change_count = (user.name_change_count or 0) + 1
-            user.last_name_change_date = datetime.utcnow()
+            # Usar getattr para manejar columnas que pueden no existir aún
+            current_count = getattr(user, 'name_change_count', None) or 0
+            if hasattr(user, 'name_change_count'):
+                user.name_change_count = current_count + 1
+                user.last_name_change_date = datetime.utcnow()
+            else:
+                # Si las columnas no existen, intentar agregarlas
+                logger.warning("Las columnas de cambio de nombre no existen, intentando agregarlas...")
+                try:
+                    from sqlalchemy import text
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS name_change_count INTEGER DEFAULT 0"))
+                    db.session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS last_name_change_date TIMESTAMP"))
+                    db.session.commit()
+                    # Recargar el usuario
+                    db.session.refresh(user)
+                    user.name_change_count = 1
+                    user.last_name_change_date = datetime.utcnow()
+                except Exception as e:
+                    logger.error(f"Error al agregar columnas: {str(e)}")
+                    # Continuar sin las columnas (modo compatible)
         
         user.updated_at = datetime.utcnow()
         db.session.commit()
         
-        changes_remaining = max(0, 3 - user.name_change_count)
+        name_change_count = getattr(user, 'name_change_count', None) or 0
+        changes_remaining = max(0, 3 - name_change_count)
         
         logger.info(f"Usuario {user.email} actualizó su perfil. Cambios restantes: {changes_remaining}")
         
