@@ -16,7 +16,12 @@ class Config:
         # PostgreSQL (producción)
         # Heroku y otros proveedores proporcionan DATABASE_URL en formato:
         # postgresql://user:password@host:port/database
-        SQLALCHEMY_DATABASE_URI = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+        # Usamos psycopg (psycopg3) que es compatible con Python 3.13
+        db_url = DATABASE_URL.replace('postgres://', 'postgresql+psycopg://', 1)
+        # Si ya tiene postgresql://, solo agregamos +psycopg
+        if db_url.startswith('postgresql://') and '+psycopg' not in db_url:
+            db_url = db_url.replace('postgresql://', 'postgresql+psycopg://', 1)
+        SQLALCHEMY_DATABASE_URI = db_url
     else:
         # SQLite (desarrollo local)
         SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') or 'sqlite:///pixelpick.db'
