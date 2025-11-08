@@ -832,5 +832,108 @@ def health_check():
         'email_config': mail_config
     }), 200
 
+@app.route('/api/test-email', methods=['POST'])
+def test_email():
+    """Endpoint para probar el envío de email (síncrono para diagnóstico)"""
+    try:
+        data = request.get_json()
+        test_email_address = data.get('email', '').strip().lower() if data else None
+        
+        if not test_email_address:
+            return jsonify({'error': 'Email es requerido'}), 400
+        
+        logger.info("=" * 50)
+        logger.info("PRUEBA DE ENVÍO DE EMAIL")
+        logger.info("=" * 50)
+        
+        # Verificar configuración
+        mail_server = app.config.get('MAIL_SERVER')
+        mail_port = app.config.get('MAIL_PORT')
+        mail_username = app.config.get('MAIL_USERNAME')
+        mail_password = app.config.get('MAIL_PASSWORD')
+        mail_use_tls = app.config.get('MAIL_USE_TLS')
+        mail_default_sender = app.config.get('MAIL_DEFAULT_SENDER')
+        
+        logger.info(f"MAIL_SERVER: {mail_server}")
+        logger.info(f"MAIL_PORT: {mail_port}")
+        logger.info(f"MAIL_USERNAME: {mail_username}")
+        logger.info(f"MAIL_PASSWORD: {'Configurado' if mail_password else 'NO CONFIGURADO'}")
+        logger.info(f"MAIL_USE_TLS: {mail_use_tls}")
+        logger.info(f"MAIL_DEFAULT_SENDER: {mail_default_sender}")
+        
+        if not mail_server or not mail_username or not mail_password:
+            error_msg = "Configuración de email incompleta"
+            logger.error(error_msg)
+            return jsonify({'error': error_msg, 'config': {
+                'MAIL_SERVER': mail_server,
+                'MAIL_USERNAME': mail_username,
+                'MAIL_PASSWORD': 'Configurado' if mail_password else 'NO CONFIGURADO'
+            }}), 400
+        
+        # Crear mensaje de prueba
+        msg = Message(
+            subject='Prueba de Email - PixelPick',
+            recipients=[test_email_address],
+            sender=mail_default_sender,
+            html="""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                    .header h1 { color: white; margin: 0; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✨ PixelPick ✨</h1>
+                    </div>
+                    <div class="content">
+                        <h2>¡Email de Prueba!</h2>
+                        <p>Si recibes este correo, significa que la configuración de email está funcionando correctamente.</p>
+                        <p>Fecha y hora: {}</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """.format(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'))
+        )
+        
+        logger.info(f"Intentando enviar email de prueba a: {test_email_address}")
+        
+        # Intentar enviar (síncrono para ver errores)
+        try:
+            mail.send(msg)
+            logger.info(f"✅ Email de prueba enviado exitosamente a: {test_email_address}")
+            return jsonify({
+                'success': True,
+                'message': f'Email de prueba enviado exitosamente a {test_email_address}. Revisa tu bandeja de entrada.'
+            }), 200
+        except Exception as smtp_error:
+            error_details = {
+                'error': str(smtp_error),
+                'error_type': type(smtp_error).__name__,
+                'config': {
+                    'MAIL_SERVER': mail_server,
+                    'MAIL_PORT': mail_port,
+                    'MAIL_USERNAME': mail_username,
+                    'MAIL_USE_TLS': mail_use_tls,
+                    'MAIL_DEFAULT_SENDER': mail_default_sender
+                }
+            }
+            logger.error(f"❌ Error al enviar email de prueba: {str(smtp_error)}")
+            logger.error(traceback.format_exc())
+            return jsonify(error_details), 500
+            
+    except Exception as e:
+        logger.error(f"Error en test-email: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({'error': f'Error al procesar la solicitud: {str(e)}'}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)
