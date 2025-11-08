@@ -265,7 +265,7 @@ def get_profile():
 @app.route('/api/profile/update', methods=['PUT'])
 @login_required
 def update_profile():
-    """Actualizar perfil del usuario"""
+    """Actualizar perfil del usuario con límite de 3 cambios"""
     try:
         data = request.get_json()
         
@@ -274,23 +274,63 @@ def update_profile():
         
         user = current_user
         
-        # Actualizar campos permitidos
-        if 'firstName' in data:
-            user.first_name = data['firstName'].strip()
-        if 'lastName' in data:
-            user.last_name = data['lastName'].strip()
+        # Verificar si el nombre o apellido realmente cambió
+        first_name_changed = 'firstName' in data and data['firstName'].strip() != user.first_name
+        last_name_changed = 'lastName' in data and data['lastName'].strip() != user.last_name
+        
+        # Si no hay cambios, retornar éxito sin hacer nada
+        if not first_name_changed and not last_name_changed:
+            return jsonify({
+                'success': True,
+                'message': 'No se realizaron cambios',
+                'user': user.to_dict(),
+                'changes_remaining': 3 - (user.name_change_count or 0)
+            }), 200
+        
+        # Si hay cambios en nombre o apellido, verificar si puede cambiar
+        if first_name_changed or last_name_changed:
+            can_change, error_message = user.can_change_name()
+            if not can_change:
+                return jsonify({
+                    'success': False,
+                    'error': error_message,
+                    'changes_remaining': 0
+                }), 403
+        
+        # Validar que los campos no estén vacíos
+        new_first_name = data.get('firstName', '').strip() if 'firstName' in data else user.first_name
+        new_last_name = data.get('lastName', '').strip() if 'lastName' in data else user.last_name
+        
+        if not new_first_name or not new_last_name:
+            return jsonify({'error': 'El nombre y apellido son requeridos'}), 400
+        
+        # Actualizar campos
+        user.first_name = new_first_name
+        user.last_name = new_last_name
+        
+        # Si cambió el nombre o apellido, incrementar contador y actualizar fecha
+        if first_name_changed or last_name_changed:
+            user.name_change_count = (user.name_change_count or 0) + 1
+            user.last_name_change_date = datetime.utcnow()
         
         user.updated_at = datetime.utcnow()
         db.session.commit()
         
+        changes_remaining = max(0, 3 - user.name_change_count)
+        
+        logger.info(f"Usuario {user.email} actualizó su perfil. Cambios restantes: {changes_remaining}")
+        
         return jsonify({
             'success': True,
-            'message': 'Perfil actualizado exitosamente',
-            'user': user.to_dict()
+            'message': 'Nombre y apellido actualizados correctamente',
+            'user': user.to_dict(),
+            'changes_remaining': changes_remaining
         }), 200
         
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error al actualizar perfil: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({'error': f'Error al actualizar perfil: {str(e)}'}), 500
 
 @app.route('/api/profile/delete', methods=['DELETE'])

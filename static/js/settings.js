@@ -64,18 +64,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos del usuario
     loadUserData();
 
-    // Guardar cambios del perfil
-    const firstNameInput = document.getElementById('firstName');
-    const lastNameInput = document.getElementById('lastName');
-    
-    if (firstNameInput && lastNameInput) {
-        // Guardar cambios cuando se pierde el foco
-        [firstNameInput, lastNameInput].forEach(input => {
-            input.addEventListener('blur', function() {
-                if (this.value.trim() !== '') {
-                    saveProfileChanges();
-                }
-            });
+    // Botón de guardar
+    const saveButton = document.getElementById('saveProfileButton');
+    if (saveButton) {
+        saveButton.addEventListener('click', function() {
+            saveProfileChanges();
         });
     }
 
@@ -164,6 +157,9 @@ function loadUserData() {
                 if (emailAddressElement) {
                     emailAddressElement.textContent = user.email;
                 }
+                
+                // Actualizar información de cambios disponibles
+                updateNameChangeInfo(user);
             }
         })
         .catch(error => {
@@ -171,14 +167,67 @@ function loadUserData() {
         });
 }
 
+// Función para actualizar información de cambios disponibles
+function updateNameChangeInfo(user) {
+    const changesRemainingText = document.getElementById('changesRemainingText');
+    const saveButton = document.getElementById('saveProfileButton');
+    
+    if (!changesRemainingText) return;
+    
+    const changesCount = user.name_change_count || 0;
+    const changesRemaining = Math.max(0, 3 - changesCount);
+    
+    if (changesCount >= 3) {
+        // Verificar si han pasado 60 días
+        if (user.last_name_change_date) {
+            const lastChangeDate = new Date(user.last_name_change_date);
+            const now = new Date();
+            const daysSinceChange = Math.floor((now - lastChangeDate) / (1000 * 60 * 60 * 24));
+            const daysRemaining = 60 - daysSinceChange;
+            
+            if (daysRemaining > 0) {
+                changesRemainingText.textContent = `Has excedido el límite de 3 cambios. Debes esperar ${daysRemaining} días más para poder cambiar tu nombre/apellido.`;
+                changesRemainingText.style.color = 'rgba(255, 100, 100, 0.9)';
+                if (saveButton) {
+                    saveButton.disabled = true;
+                    saveButton.style.opacity = '0.5';
+                    saveButton.style.cursor = 'not-allowed';
+                }
+                return;
+            } else {
+                // Han pasado 60 días, puede cambiar de nuevo
+                changesRemainingText.textContent = 'Puedes cambiar tu nombre/apellido nuevamente.';
+                changesRemainingText.style.color = 'rgba(0, 212, 255, 0.9)';
+            }
+        }
+    } else {
+        changesRemainingText.textContent = `Tienes ${changesRemaining} ${changesRemaining === 1 ? 'oportunidad' : 'oportunidades'} restante${changesRemaining !== 1 ? 's' : ''} para cambiar tu nombre/apellido.`;
+        changesRemainingText.style.color = 'rgba(255, 255, 255, 0.7)';
+    }
+    
+    if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.style.opacity = '1';
+        saveButton.style.cursor = 'pointer';
+    }
+}
+
 // Función para guardar cambios del perfil
 function saveProfileChanges() {
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
+    const saveButton = document.getElementById('saveProfileButton');
+    const saveMessage = document.getElementById('saveMessage');
     
     if (!firstName || !lastName) {
-        alert('El nombre y apellido son requeridos');
+        showMessage('El nombre y apellido son requeridos', 'error');
         return;
+    }
+    
+    // Deshabilitar botón mientras se guarda
+    if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.innerHTML = '<span>Guardando...</span>';
     }
     
     fetch('/api/profile/update', {
@@ -199,16 +248,53 @@ function saveProfileChanges() {
             nameElements.forEach(el => {
                 el.textContent = `${firstName} ${lastName}`;
             });
-            // Mostrar mensaje de éxito (opcional)
-            console.log('Perfil actualizado exitosamente');
+            
+            // Mostrar mensaje de éxito
+            showMessage(data.message || 'Nombre y apellido actualizados correctamente', 'success');
+            
+            // Actualizar información de cambios disponibles
+            if (data.user) {
+                updateNameChangeInfo(data.user);
+            }
         } else {
-            alert(data.error || 'Error al actualizar perfil');
+            showMessage(data.error || 'Error al actualizar perfil', 'error');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al conectar con el servidor');
+        showMessage('Error al conectar con el servidor', 'error');
+    })
+    .finally(() => {
+        // Re-habilitar botón
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<span>Guardar Cambios</span>';
+        }
     });
+}
+
+// Función para mostrar mensajes
+function showMessage(message, type) {
+    const saveMessage = document.getElementById('saveMessage');
+    if (!saveMessage) return;
+    
+    saveMessage.style.display = 'block';
+    saveMessage.textContent = message;
+    
+    if (type === 'success') {
+        saveMessage.style.background = 'rgba(0, 212, 255, 0.2)';
+        saveMessage.style.border = '1px solid rgba(0, 212, 255, 0.5)';
+        saveMessage.style.color = '#00d4ff';
+    } else {
+        saveMessage.style.background = 'rgba(255, 100, 100, 0.2)';
+        saveMessage.style.border = '1px solid rgba(255, 100, 100, 0.5)';
+        saveMessage.style.color = '#ff6464';
+    }
+    
+    // Ocultar mensaje después de 5 segundos
+    setTimeout(() => {
+        saveMessage.style.display = 'none';
+    }, 5000);
 }
 
 // Función para eliminar cuenta

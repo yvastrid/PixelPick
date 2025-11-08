@@ -79,6 +79,23 @@
                                     <input type="text" id="lastName" name="lastName" class="form-input" value="" required>
                                 </div>
                             </div>
+                            
+                            <!-- Información de cambios disponibles -->
+                            <div class="name-change-info" id="nameChangeInfo" style="margin-top: 15px; padding: 12px; background: rgba(0, 212, 255, 0.1); border-radius: 8px; border: 1px solid rgba(0, 212, 255, 0.3);">
+                                <p style="margin: 0; color: rgba(255, 255, 255, 0.7); font-size: 14px;">
+                                    <span id="changesRemainingText">Cargando...</span>
+                                </p>
+                            </div>
+                            
+                            <!-- Botón de Guardar -->
+                            <div style="margin-top: 20px;">
+                                <button type="button" id="saveProfileButton" class="save-button" style="padding: 12px 24px; background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 16px;">
+                                    <span>Guardar Cambios</span>
+                                </button>
+                            </div>
+                            
+                            <!-- Mensaje de éxito/error -->
+                            <div id="saveMessage" style="margin-top: 15px; display: none; padding: 12px; border-radius: 8px; font-size: 14px;"></div>
                         </div>
                     </div>
 
