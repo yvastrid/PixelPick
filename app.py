@@ -8,6 +8,7 @@ import json
 import logging
 import traceback
 import secrets
+import threading
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -156,58 +157,84 @@ def settings():
 # ==================== FUNCIONES DE EMAIL ====================
 
 def send_verification_email(user, token):
-    """Envía email de verificación al usuario"""
-    try:
-        verification_url = f"{app.config.get('APP_URL', 'https://pixelpick-akp2.onrender.com')}/verify-email?token={token}"
-        
-        msg = Message(
-            subject='Verifica tu correo electrónico - PixelPick',
-            recipients=[user.email],
-            html=f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
-                    .header h1 {{ color: white; margin: 0; }}
-                    .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
-                    .button {{ display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
-                    .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>✨ PixelPick ✨</h1>
-                    </div>
-                    <div class="content">
-                        <h2>¡Bienvenido a PixelPick, {user.first_name}!</h2>
-                        <p>Gracias por registrarte. Para completar tu registro, por favor verifica tu correo electrónico haciendo clic en el botón de abajo:</p>
-                        <div style="text-align: center;">
-                            <a href="{verification_url}" class="button">Verificar Mi Correo</a>
+    """Envía email de verificación al usuario (ejecuta en thread separado)"""
+    def _send_email():
+        """Función interna que envía el email en un thread separado"""
+        try:
+            # Verificar configuración de email
+            mail_server = app.config.get('MAIL_SERVER')
+            mail_username = app.config.get('MAIL_USERNAME')
+            mail_password = app.config.get('MAIL_PASSWORD')
+            
+            if not mail_server or not mail_username or not mail_password:
+                logger.error("Configuración de email incompleta. Variables requeridas: MAIL_SERVER, MAIL_USERNAME, MAIL_PASSWORD")
+                return False
+            
+            logger.info(f"Intentando enviar email de verificación a: {user.email}")
+            logger.info(f"Configuración SMTP: Server={mail_server}, Username={mail_username[:10]}...")
+            
+            verification_url = f"{app.config.get('APP_URL', 'https://pixelpick-akp2.onrender.com')}/verify-email?token={token}"
+            
+            msg = Message(
+                subject='Verifica tu correo electrónico - PixelPick',
+                recipients=[user.email],
+                html=f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .header {{ background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                        .header h1 {{ color: white; margin: 0; }}
+                        .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+                        .button {{ display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%); color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+                        .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>✨ PixelPick ✨</h1>
                         </div>
-                        <p>O copia y pega este enlace en tu navegador:</p>
-                        <p style="word-break: break-all; color: #00d4ff;">{verification_url}</p>
-                        <p>Este enlace expirará en 24 horas.</p>
-                        <p>Si no creaste una cuenta en PixelPick, puedes ignorar este correo.</p>
+                        <div class="content">
+                            <h2>¡Bienvenido a PixelPick, {user.first_name}!</h2>
+                            <p>Gracias por registrarte. Para completar tu registro, por favor verifica tu correo electrónico haciendo clic en el botón de abajo:</p>
+                            <div style="text-align: center;">
+                                <a href="{verification_url}" class="button">Verificar Mi Correo</a>
+                            </div>
+                            <p>O copia y pega este enlace en tu navegador:</p>
+                            <p style="word-break: break-all; color: #00d4ff;">{verification_url}</p>
+                            <p>Este enlace expirará en 24 horas.</p>
+                            <p>Si no creaste una cuenta en PixelPick, puedes ignorar este correo.</p>
+                        </div>
+                        <div class="footer">
+                            <p>© 2025 PixelPick. Todos los derechos reservados.</p>
+                        </div>
                     </div>
-                    <div class="footer">
-                        <p>© 2025 PixelPick. Todos los derechos reservados.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
-        )
-        
-        mail.send(msg)
-        return True
-    except Exception as e:
-        logger.error(f"Error al enviar email: {str(e)}")
-        raise
+                </body>
+                </html>
+                """
+            )
+            
+            # Enviar email con timeout
+            with app.app_context():
+                mail.send(msg)
+            
+            logger.info(f"Email de verificación enviado exitosamente a: {user.email}")
+            return True
+        except Exception as e:
+            logger.error(f"Error al enviar email a {user.email}: {str(e)}")
+            logger.error(traceback.format_exc())
+            return False
+    
+    # Ejecutar en thread separado para no bloquear la respuesta
+    thread = threading.Thread(target=_send_email)
+    thread.daemon = True
+    thread.start()
+    logger.info(f"Thread de envío de email iniciado para: {user.email}")
+    return True
 
 # ==================== API RUTAS - AUTENTICACIÓN ====================
 
@@ -263,13 +290,14 @@ def register():
         db.session.commit()
         logger.info(f"Usuario registrado exitosamente: {email}")
         
-        # Enviar email de verificación
+        # Enviar email de verificación en segundo plano (no bloquea la respuesta)
         try:
             send_verification_email(user, verification_token)
-            logger.info(f"Email de verificación enviado a: {email}")
+            logger.info(f"Proceso de envío de email iniciado para: {email}")
         except Exception as email_error:
-            logger.error(f"Error al enviar email de verificación: {str(email_error)}")
-            # Continuar aunque falle el envío de email
+            logger.error(f"Error al iniciar proceso de envío de email: {str(email_error)}")
+            logger.error(traceback.format_exc())
+            # Continuar aunque falle - el usuario puede solicitar reenvío después
         
         # NO iniciar sesión automáticamente - el usuario debe verificar su email primero
         # login_user(user, remember=True)
