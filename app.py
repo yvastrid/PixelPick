@@ -154,15 +154,25 @@ def benefits():
 
 @app.route('/signin')
 def signin():
+    # Si el usuario ya está autenticado y tiene intención de suscribirse, redirigir al checkout
+    intent_to_subscribe = session.get('intent_to_subscribe', False)
     if current_user.is_authenticated:
-        return redirect(url_for('welcome'))
+        if intent_to_subscribe:
+            return redirect(url_for('checkout'))
+        else:
+            return redirect(url_for('welcome'))
     # Si viene de benefits, ya tiene la intención guardada en sesión
     return render_template('signin.html')
 
 @app.route('/login')
 def login():
+    # Si el usuario ya está autenticado y tiene intención de suscribirse, redirigir al checkout
+    intent_to_subscribe = session.get('intent_to_subscribe', False)
     if current_user.is_authenticated:
-        return redirect(url_for('welcome'))
+        if intent_to_subscribe:
+            return redirect(url_for('checkout'))
+        else:
+            return redirect(url_for('welcome'))
     # Si viene de benefits, ya tiene la intención guardada en sesión
     return render_template('login.html')
 
