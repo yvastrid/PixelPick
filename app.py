@@ -156,30 +156,16 @@ def benefits():
 
 @app.route('/signin')
 def signin():
-    # NO redirigir automáticamente, siempre mostrar el formulario de login
-    # El usuario debe completar el login primero
-    if current_user.is_authenticated:
-        # Si ya está autenticado, verificar intención de suscribirse
-        intent_to_subscribe = session.get('intent_to_subscribe', False)
-        if intent_to_subscribe:
-            return redirect(url_for('checkout'))
-        else:
-            return redirect(url_for('welcome'))
-    # Mostrar formulario de login (no redirigir)
+    # SIEMPRE mostrar el formulario de login
+    # NO hacer ninguna redirección automática
+    # El usuario DEBE completar el formulario primero
     return render_template('signin.html')
 
 @app.route('/login')
 def login():
-    # SIEMPRE mostrar el formulario de registro primero
-    # NO redirigir automáticamente al checkout, el usuario debe completar el registro
-    if current_user.is_authenticated:
-        # Solo si ya está autenticado, verificar intención de suscribirse
-        intent_to_subscribe = session.get('intent_to_subscribe', False)
-        if intent_to_subscribe:
-            return redirect(url_for('checkout'))
-        else:
-            return redirect(url_for('welcome'))
-    # Mostrar formulario de registro (el usuario debe completarlo)
+    # SIEMPRE mostrar el formulario de registro
+    # NO hacer ninguna redirección automática
+    # El usuario DEBE completar el formulario primero
     return render_template('login.html')
 
 # ==================== RUTAS PROTEGIDAS ====================
