@@ -55,7 +55,7 @@
 
             <!-- Profile Info -->
             <div class="profile-info-section">
-                <h1 class="profile-name-large">Astrid Marquez</h1>
+                <h1 class="profile-name-large">{% if current_user.is_authenticated %}{{ current_user.first_name }} {{ current_user.last_name }}{% else %}Usuario{% endif %}</h1>
                 <div class="profile-joined">
                     <svg class="calendar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -63,7 +63,7 @@
                         <line x1="8" y1="2" x2="8" y2="6"/>
                         <line x1="3" y1="10" x2="21" y2="10"/>
                     </svg>
-                    <span>Se unió en octubre de 2025</span>
+                    <span>{% if current_user.is_authenticated and current_user.created_at %}{% set date = current_user.created_at %}{% set month_names = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'] %}Se unió en {{ month_names[date.month - 1] }} de {{ date.year }}{% else %}Se unió recientemente{% endif %}</span>
                 </div>
                 <div class="profile-stats">
                     <div class="stat-item">
@@ -136,7 +136,7 @@
                     <span class="empty-badge">0</span>
                 </div>
                 <h3 class="empty-title">Nada aquí, aún</h3>
-                <p class="empty-description">Astrid Marquez no ha jugado juegos recientemente.</p>
+                <p class="empty-description">{% if current_user.is_authenticated %}{{ current_user.first_name }} {{ current_user.last_name }}{% else %}Este usuario{% endif %} no ha jugado juegos recientemente.</p>
             </div>
         </div>
     </section>
@@ -152,8 +152,8 @@
                     </svg>
                 </div>
                 <div class="profile-details">
-                    <h3 class="profile-name">Astrid Marquez</h3>
-                    <p class="profile-email">cheesekimbapastrid@gmail.com</p>
+                    <h3 class="profile-name">{% if current_user.is_authenticated %}{{ current_user.first_name }} {{ current_user.last_name }}{% else %}Usuario{% endif %}</h3>
+                    <p class="profile-email">{% if current_user.is_authenticated %}{{ current_user.email }}{% else %}email@ejemplo.com{% endif %}</p>
                 </div>
             </div>
             <div class="profile-separator"></div>

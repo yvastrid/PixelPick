@@ -148,6 +148,12 @@ function loadProfileData() {
                     statNumbers[1].textContent = stats.playing || 0;
                 }
                 
+                // Actualizar mensaje de empty state con el nombre del usuario
+                const emptyDescription = document.querySelector('.empty-description');
+                if (emptyDescription) {
+                    emptyDescription.textContent = `${user.first_name} ${user.last_name} no ha jugado juegos recientemente.`;
+                }
+                
                 // Actualizar juegos recientes
                 updateRecentGames(data.games);
             }

@@ -59,8 +59,8 @@
                     </svg>
                 </div>
                 <div class="profile-details">
-                    <h3 class="profile-name">Astrid Marquez</h3>
-                    <p class="profile-email">cheesekimbapastrid@gmail.com</p>
+                    <h3 class="profile-name">{% if current_user.is_authenticated %}{{ current_user.first_name }} {{ current_user.last_name }}{% else %}Usuario{% endif %}</h3>
+                    <p class="profile-email">{% if current_user.is_authenticated %}{{ current_user.email }}{% else %}email@ejemplo.com{% endif %}</p>
                 </div>
             </div>
 
