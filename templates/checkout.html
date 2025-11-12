@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://js.stripe.com/v3/"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         .checkout-container {
             min-height: 100vh;
             background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
@@ -21,7 +25,7 @@
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 40px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             border: 1px solid rgba(0, 212, 255, 0.2);
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -40,6 +44,11 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        
+        .checkout-header p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
         }
         
         .plan-summary {
@@ -68,26 +77,158 @@
             margin-right: 5px;
         }
         
-        #card-element {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 8px;
-            padding: 15px;
+        .plan-summary p {
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        /* Formulario de pago */
+        .payment-form-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
             color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
             margin-bottom: 20px;
         }
         
-        #card-element:focus {
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-group.full-width {
+            flex: 1 1 100%;
+        }
+        
+        .form-group.half-width {
+            flex: 1 1 calc(50% - 7.5px);
+        }
+        
+        .form-label {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .stripe-element-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            transition: all 0.3s;
+        }
+        
+        .stripe-element-container:focus-within {
             border-color: #00d4ff;
-            outline: none;
             box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+        
+        .stripe-element-container.StripeElement--focus {
+            border-color: #00d4ff;
+        }
+        
+        .stripe-element-container.StripeElement--invalid {
+            border-color: #ff6b6b;
+        }
+        
+        #card-number,
+        #card-expiry,
+        #card-cvc {
+            padding: 0;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        #card-number::placeholder,
+        #card-expiry::placeholder,
+        #card-cvc::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .card-icons {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        
+        .card-icon {
+            width: 32px;
+            height: 20px;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        
+        .card-icon.active {
+            opacity: 1;
         }
         
         #card-errors {
             color: #ff6b6b;
             font-size: 14px;
-            margin-bottom: 20px;
+            margin-top: 10px;
             min-height: 20px;
+        }
+        
+        .country-section {
+            margin-bottom: 20px;
+        }
+        
+        .country-select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .country-select:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+        
+        .country-select option {
+            background: #1a1f3a;
+            color: #fff;
+        }
+        
+        .postal-code-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .postal-code-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+        
+        .postal-code-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
         }
         
         .submit-button {
@@ -144,6 +285,17 @@
             color: #4caf50;
             margin-top: 20px;
         }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .form-group.half-width {
+                flex: 1 1 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -151,7 +303,7 @@
         <div class="checkout-card">
             <div class="checkout-header">
                 <h1>✨ PixelPick ✨</h1>
-                <p style="color: rgba(255, 255, 255, 0.7);">Completa tu suscripción</p>
+                <p>Completa tu suscripción</p>
             </div>
             
             <div class="plan-summary">
@@ -159,18 +311,84 @@
                 <div class="plan-price">
                     <span class="currency">$</span>{{ plan_price }} <span style="font-size: 16px;">{{ plan_currency }}</span>
                 </div>
-                <p style="color: rgba(255, 255, 255, 0.6); margin-top: 10px; font-size: 14px;">Pago único - Acceso completo</p>
+                <p>Pago único - Acceso completo</p>
             </div>
             
             <form id="payment-form">
-                <div id="card-element">
-                    <!-- Stripe Elements creará el formulario aquí -->
+                <!-- Información de la tarjeta -->
+                <div class="payment-form-section">
+                    <h3 class="section-title">Información de la tarjeta</h3>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">Número</label>
+                        <div class="stripe-element-container" id="card-number-container">
+                            <div id="card-number"></div>
+                        </div>
+                        <div class="card-icons">
+                            <svg class="card-icon" viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="40" height="24" rx="3" fill="#1A1F6E"/>
+                                <path d="M16 8h8v8h-8z" fill="#fff"/>
+                            </svg>
+                            <svg class="card-icon" viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="40" height="24" rx="3" fill="#EB001B"/>
+                                <circle cx="15" cy="12" r="5" fill="#fff"/>
+                                <circle cx="25" cy="12" r="5" fill="#fff"/>
+                            </svg>
+                            <svg class="card-icon" viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="40" height="24" rx="3" fill="#006FCF"/>
+                                <path d="M20 8l-4 8h8l-4-8z" fill="#fff"/>
+                            </svg>
+                            <svg class="card-icon" viewBox="0 0 40 24" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="40" height="24" rx="3" fill="#FF5F00"/>
+                                <circle cx="20" cy="12" r="6" fill="#fff"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group half-width">
+                            <label class="form-label">MM/AA</label>
+                            <div class="stripe-element-container" id="card-expiry-container">
+                                <div id="card-expiry"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group half-width">
+                            <label class="form-label">CVC</label>
+                            <div class="stripe-element-container" id="card-cvc-container">
+                                <div id="card-cvc"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="card-errors" role="alert"></div>
                 </div>
                 
-                <div id="card-errors" role="alert"></div>
+                <!-- País o región -->
+                <div class="payment-form-section country-section">
+                    <h3 class="section-title">País o región</h3>
+                    
+                    <div class="form-group full-width">
+                        <select class="country-select" id="country" name="country" required>
+                            <option value="MX" selected>México</option>
+                            <option value="US">Estados Unidos</option>
+                            <option value="CA">Canadá</option>
+                            <option value="ES">España</option>
+                            <option value="AR">Argentina</option>
+                            <option value="CO">Colombia</option>
+                            <option value="CL">Chile</option>
+                            <option value="PE">Perú</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group full-width" style="margin-top: 15px;">
+                        <label class="form-label">Código postal</label>
+                        <input type="text" class="postal-code-input" id="postal-code" name="postal_code" placeholder="12345" required>
+                    </div>
+                </div>
                 
                 <button type="submit" id="submit-button" class="submit-button">
-                    <span id="button-text">Pagar ${{ plan_price }} {{ plan_currency }}</span>
+                    <span id="button-text">Pagar</span>
                 </button>
                 
                 <a href="{{ url_for('benefits') }}" class="cancel-link">Cancelar</a>
@@ -190,10 +408,12 @@
     <script>
         // Inicializar Stripe
         const stripe = Stripe('{{ stripe_public_key }}');
-        const elements = stripe.elements();
+        const elements = stripe.elements({
+            locale: 'es'
+        });
         
-        // Crear elemento de tarjeta
-        const cardElement = elements.create('card', {
+        // Crear elementos de tarjeta separados
+        const cardNumber = elements.create('cardNumber', {
             style: {
                 base: {
                     color: '#fff',
@@ -209,17 +429,73 @@
             },
         });
         
-        cardElement.mount('#card-element');
+        const cardExpiry = elements.create('cardExpiry', {
+            style: {
+                base: {
+                    color: '#fff',
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: '16px',
+                    '::placeholder': {
+                        color: 'rgba(255, 255, 255, 0.5)',
+                    },
+                },
+                invalid: {
+                    color: '#ff6b6b',
+                },
+            },
+        });
         
-        // Manejar errores de tarjeta
-        cardElement.on('change', function(event) {
+        const cardCvc = elements.create('cardCvc', {
+            style: {
+                base: {
+                    color: '#fff',
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: '16px',
+                    '::placeholder': {
+                        color: 'rgba(255, 255, 255, 0.5)',
+                    },
+                },
+                invalid: {
+                    color: '#ff6b6b',
+                },
+            },
+        });
+        
+        // Montar elementos
+        cardNumber.mount('#card-number');
+        cardExpiry.mount('#card-expiry');
+        cardCvc.mount('#card-cvc');
+        
+        // Detectar tipo de tarjeta y mostrar icono
+        cardNumber.on('change', function(event) {
             const displayError = document.getElementById('card-errors');
             if (event.error) {
                 displayError.textContent = event.error.message;
             } else {
                 displayError.textContent = '';
             }
+            
+            // Actualizar iconos de tarjeta
+            if (event.brand) {
+                document.querySelectorAll('.card-icon').forEach(icon => {
+                    icon.classList.remove('active');
+                });
+            }
         });
+        
+        // Manejar errores
+        cardNumber.on('change', handleCardError);
+        cardExpiry.on('change', handleCardError);
+        cardCvc.on('change', handleCardError);
+        
+        function handleCardError(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        }
         
         // Manejar envío del formulario
         const form = document.getElementById('payment-form');
@@ -236,6 +512,9 @@
             buttonText.textContent = 'Procesando...';
             loading.style.display = 'block';
             
+            // Ocultar errores previos
+            document.getElementById('card-errors').textContent = '';
+            
             try {
                 // Crear Payment Intent
                 const response = await fetch('/api/create-payment-intent', {
@@ -251,15 +530,23 @@
                     throw new Error(data.error || 'Error al crear el pago');
                 }
                 
+                // Obtener código postal
+                const postalCode = document.getElementById('postal-code').value;
+                const country = document.getElementById('country').value;
+                
                 // Confirmar pago con Stripe
-                        const { error, paymentIntent } = await stripe.confirmCardPayment(
+                const { error, paymentIntent } = await stripe.confirmCardPayment(
                     data.client_secret,
                     {
                         payment_method: {
-                            card: cardElement,
+                            card: cardNumber,
                             billing_details: {
                                 name: '{{ current_user.first_name if current_user.is_authenticated else "" }} {{ current_user.last_name if current_user.is_authenticated else "" }}',
                                 email: '{{ current_user.email if current_user.is_authenticated else "" }}',
+                                address: {
+                                    country: country,
+                                    postal_code: postalCode,
+                                },
                             },
                         },
                     }
@@ -269,7 +556,7 @@
                     // Mostrar error
                     document.getElementById('card-errors').textContent = error.message;
                     submitButton.disabled = false;
-                    buttonText.textContent = `Pagar ${{ plan_price }} {{ plan_currency }}`;
+                    buttonText.textContent = 'Pagar';
                     loading.style.display = 'none';
                 } else if (paymentIntent.status === 'succeeded') {
                     // Pago exitoso
@@ -285,7 +572,7 @@
                 console.error('Error:', error);
                 document.getElementById('card-errors').textContent = error.message || 'Error al procesar el pago';
                 submitButton.disabled = false;
-                buttonText.textContent = `Pagar ${{ plan_price }} {{ plan_currency }}`;
+                buttonText.textContent = 'Pagar';
                 loading.style.display = 'none';
             }
         });
