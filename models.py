@@ -157,3 +157,69 @@ class UserPreference(db.Model):
             'weight': self.weight
         }
 
+class Transaction(db.Model):
+    """Modelo de Transacciones de Pago"""
+    __tablename__ = 'transactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    transaction_type = db.Column(db.String(50), nullable=False)  # 'purchase', 'subscription'
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(3), default='MXN')
+    payment_method = db.Column(db.String(50))  # 'stripe', 'paypal', etc.
+    payment_intent_id = db.Column(db.String(255))  # ID de Stripe
+    status = db.Column(db.String(50), nullable=False, default='pending')  # 'pending', 'completed', 'failed', 'refunded'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relación con usuario
+    user = db.relationship('User', backref='transactions')
+    
+    def to_dict(self):
+        """Convierte la transacción a diccionario"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'transaction_type': self.transaction_type,
+            'amount': float(self.amount) if self.amount else 0.0,
+            'currency': self.currency,
+            'payment_method': self.payment_method,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None
+        }
+
+class Subscription(db.Model):
+    """Modelo de Suscripciones"""
+    __tablename__ = 'subscriptions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    plan_type = db.Column(db.String(50), nullable=False)  # 'pixelie_plan'
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(3), default='MXN')
+    status = db.Column(db.String(50), nullable=False, default='active')  # 'active', 'cancelled', 'expired'
+    subscription_id = db.Column(db.String(255))  # ID de Stripe
+    current_period_start = db.Column(db.DateTime, nullable=True)
+    current_period_end = db.Column(db.DateTime, nullable=True)
+    cancel_at_period_end = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relación con usuario
+    user = db.relationship('User', backref='subscriptions')
+    
+    def to_dict(self):
+        """Convierte la suscripción a diccionario"""
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'plan_type': self.plan_type,
+            'amount': float(self.amount) if self.amount else 0.0,
+            'currency': self.currency,
+            'status': self.status,
+            'current_period_start': self.current_period_start.isoformat() if self.current_period_start else None,
+            'current_period_end': self.current_period_end.isoformat() if self.current_period_end else None
+        }
+

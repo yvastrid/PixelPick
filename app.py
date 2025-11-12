@@ -2,13 +2,14 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
 from config import Config
-from models import db, User, Game, UserGame, UserPreference
+from models import db, User, Game, UserGame, UserPreference, Transaction, Subscription
 from datetime import datetime, timedelta
 import json
 import logging
 import traceback
 import secrets
 import threading
+import stripe
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -24,6 +25,9 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'signin'
 login_manager.login_message = 'Por favor, inicia sesión para acceder a esta página.'
+
+# Inicializar Stripe
+stripe.api_key = app.config.get('STRIPE_SECRET_KEY')
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -83,6 +87,25 @@ def init_db():
                     logger.info("Columna email_verification_sent_at agregada exitosamente")
             except Exception as migration_error:
                 logger.warning(f"No se pudieron agregar las nuevas columnas (puede que ya existan): {str(migration_error)}")
+                db.session.rollback()
+            
+            # Verificar y crear tablas de pagos si no existen
+            try:
+                from sqlalchemy import inspect
+                inspector = inspect(db.engine)
+                existing_tables = inspector.get_table_names()
+                
+                if 'transactions' not in existing_tables:
+                    logger.info("Creando tabla transactions...")
+                    Transaction.__table__.create(db.engine)
+                    logger.info("Tabla transactions creada exitosamente")
+                
+                if 'subscriptions' not in existing_tables:
+                    logger.info("Creando tabla subscriptions...")
+                    Subscription.__table__.create(db.engine)
+                    logger.info("Tabla subscriptions creada exitosamente")
+            except Exception as payment_tables_error:
+                logger.warning(f"No se pudieron crear las tablas de pago (puede que ya existan): {str(payment_tables_error)}")
                 db.session.rollback()
             # Crear algunos juegos de ejemplo si no existen
             if Game.query.count() == 0:
@@ -909,6 +932,196 @@ def test_email():
         logger.error(f"Error en test-email: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({'error': f'Error al procesar la solicitud: {str(e)}'}), 500
+
+# ==================== RUTAS DE PAGO - STRIPE ====================
+
+@app.route('/checkout')
+@login_required
+def checkout():
+    """Página de checkout para el plan Pixelie"""
+    stripe_public_key = app.config.get('STRIPE_PUBLIC_KEY')
+    if not stripe_public_key:
+        logger.warning("STRIPE_PUBLIC_KEY no configurada")
+    
+    plan_price = app.config.get('PIXELIE_PLAN_PRICE', 100.00)
+    plan_currency = app.config.get('PIXELIE_PLAN_CURRENCY', 'mxn')
+    
+    return render_template('checkout.html', 
+                         stripe_public_key=stripe_public_key,
+                         plan_price=plan_price,
+                         plan_currency=plan_currency.upper())
+
+@app.route('/api/create-payment-intent', methods=['POST'])
+@login_required
+def create_payment_intent():
+    """Crear Payment Intent de Stripe para el plan Pixelie"""
+    try:
+        if not stripe.api_key:
+            return jsonify({'error': 'Stripe no está configurado'}), 500
+        
+        plan_price = app.config.get('PIXELIE_PLAN_PRICE', 100.00)
+        plan_currency = app.config.get('PIXELIE_PLAN_CURRENCY', 'mxn')
+        
+        # Convertir a centavos (Stripe usa la unidad más pequeña de la moneda)
+        amount_in_cents = int(plan_price * 100) if plan_currency.lower() == 'mxn' else int(plan_price * 100)
+        
+        # Crear Payment Intent en Stripe
+        try:
+            intent = stripe.PaymentIntent.create(
+                amount=amount_in_cents,
+                currency=plan_currency.lower(),
+                metadata={
+                    'user_id': current_user.id,
+                    'user_email': current_user.email,
+                    'plan_type': 'pixelie_plan',
+                    'plan_name': 'Pixelie Plan'
+                },
+                description='Pixelie Plan - PixelPick'
+            )
+            
+            # Crear transacción pendiente en la base de datos
+            transaction = Transaction(
+                user_id=current_user.id,
+                transaction_type='subscription',
+                amount=plan_price,
+                currency=plan_currency.upper(),
+                payment_method='stripe',
+                payment_intent_id=intent.id,
+                status='pending'
+            )
+            db.session.add(transaction)
+            db.session.commit()
+            
+            logger.info(f"Payment Intent creado para usuario {current_user.id}: {intent.id}")
+            
+            return jsonify({
+                'client_secret': intent.client_secret,
+                'payment_intent_id': intent.id
+            }), 200
+            
+        except stripe.error.StripeError as e:
+            logger.error(f"Error de Stripe: {str(e)}")
+            return jsonify({'error': f'Error al procesar el pago: {str(e)}'}), 500
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al crear payment intent: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({'error': f'Error al procesar la solicitud: {str(e)}'}), 500
+
+@app.route('/api/stripe-webhook', methods=['POST'])
+def stripe_webhook():
+    """Webhook de Stripe para confirmar pagos"""
+    payload = request.data
+    sig_header = request.headers.get('Stripe-Signature')
+    webhook_secret = app.config.get('STRIPE_WEBHOOK_SECRET')
+    
+    if not webhook_secret:
+        logger.warning("STRIPE_WEBHOOK_SECRET no configurada, saltando verificación")
+        # En desarrollo, podemos procesar sin verificación
+        try:
+            event = json.loads(payload)
+        except:
+            return jsonify({'error': 'Invalid payload'}), 400
+    else:
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, webhook_secret
+            )
+        except ValueError:
+            logger.error("Invalid payload")
+            return jsonify({'error': 'Invalid payload'}), 400
+        except stripe.error.SignatureVerificationError:
+            logger.error("Invalid signature")
+            return jsonify({'error': 'Invalid signature'}), 400
+    
+    # Manejar eventos
+    event_type = event.get('type') if isinstance(event, dict) else event['type']
+    
+    if event_type == 'payment_intent.succeeded':
+        payment_intent = event['data']['object']
+        payment_intent_id = payment_intent['id']
+        
+        logger.info(f"Payment Intent exitoso: {payment_intent_id}")
+        
+        # Buscar transacción en la base de datos
+        transaction = Transaction.query.filter_by(
+            payment_intent_id=payment_intent_id
+        ).first()
+        
+        if transaction:
+            # Actualizar transacción
+            transaction.status = 'completed'
+            transaction.completed_at = datetime.utcnow()
+            
+            # Crear o actualizar suscripción
+            subscription = Subscription.query.filter_by(
+                user_id=transaction.user_id,
+                plan_type='pixelie_plan'
+            ).first()
+            
+            if not subscription:
+                # Crear nueva suscripción
+                subscription = Subscription(
+                    user_id=transaction.user_id,
+                    plan_type='pixelie_plan',
+                    amount=transaction.amount,
+                    currency=transaction.currency,
+                    status='active',
+                    subscription_id=payment_intent_id,
+                    current_period_start=datetime.utcnow(),
+                    current_period_end=datetime.utcnow() + timedelta(days=365)  # Plan de un año
+                )
+                db.session.add(subscription)
+            else:
+                # Actualizar suscripción existente
+                subscription.status = 'active'
+                subscription.current_period_start = datetime.utcnow()
+                subscription.current_period_end = datetime.utcnow() + timedelta(days=365)
+            
+            db.session.commit()
+            logger.info(f"Suscripción activada para usuario {transaction.user_id}")
+        else:
+            logger.warning(f"Transacción no encontrada para payment_intent_id: {payment_intent_id}")
+    
+    elif event_type == 'payment_intent.payment_failed':
+        payment_intent = event['data']['object']
+        payment_intent_id = payment_intent['id']
+        
+        logger.info(f"Payment Intent fallido: {payment_intent_id}")
+        
+        # Actualizar transacción como fallida
+        transaction = Transaction.query.filter_by(
+            payment_intent_id=payment_intent_id
+        ).first()
+        
+        if transaction:
+            transaction.status = 'failed'
+            db.session.commit()
+    
+    return jsonify({'status': 'success'}), 200
+
+@app.route('/api/payment-status/<payment_intent_id>', methods=['GET'])
+@login_required
+def payment_status(payment_intent_id):
+    """Verificar estado de un pago"""
+    try:
+        transaction = Transaction.query.filter_by(
+            payment_intent_id=payment_intent_id,
+            user_id=current_user.id
+        ).first()
+        
+        if not transaction:
+            return jsonify({'error': 'Transacción no encontrada'}), 404
+        
+        return jsonify({
+            'status': transaction.status,
+            'transaction': transaction.to_dict()
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error al verificar estado de pago: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)

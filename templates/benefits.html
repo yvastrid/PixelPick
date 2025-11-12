@@ -41,7 +41,7 @@
                                     Level up completo con un solo clic en tu cartera.
                                 </p>
                                 <div class="button-group">
-                                    <a href="{{ url_for('login') }}" class="purchase-button">
+                                    <a href="{{ url_for('checkout') if current_user.is_authenticated else url_for('signin') }}" class="purchase-button" id="purchaseButton">
                                         <span class="button-text">Comprar Plan</span>
                                         <span class="button-arrow">→</span>
                                     </a>

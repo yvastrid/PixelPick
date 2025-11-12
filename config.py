@@ -43,4 +43,13 @@ class Config:
     
     # URL base de la aplicación (para links en emails)
     APP_URL = os.environ.get('APP_URL') or 'https://pixelpick-akp2.onrender.com'
+    
+    # Configuración de Stripe
+    STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY')
+    STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+    STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+    
+    # Plan de suscripción Pixelie Plan
+    PIXELIE_PLAN_PRICE = 100.00  # MXN
+    PIXELIE_PLAN_CURRENCY = 'mxn'
 

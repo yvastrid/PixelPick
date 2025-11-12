@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - PixelPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        .checkout-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .checkout-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .checkout-header h1 {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .plan-summary {
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .plan-name {
+            color: #fff;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .plan-price {
+            color: #00d4ff;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .plan-price .currency {
+            font-size: 20px;
+            margin-right: 5px;
+        }
+        
+        #card-element {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+        
+        #card-element:focus {
+            border-color: #00d4ff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+        }
+        
+        #card-errors {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-bottom: 20px;
+            min-height: 20px;
+        }
+        
+        .submit-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #00d4ff 0%, #5b86e5 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .submit-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+        
+        .submit-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .cancel-link {
+            display: block;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        
+        .cancel-link:hover {
+            color: #fff;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #00d4ff;
+            margin-top: 20px;
+        }
+        
+        .success-message {
+            display: none;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: #4caf50;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-container">
+        <div class="checkout-card">
+            <div class="checkout-header">
+                <h1>✨ PixelPick ✨</h1>
+                <p style="color: rgba(255, 255, 255, 0.7);">Completa tu suscripción</p>
+            </div>
+            
+            <div class="plan-summary">
+                <div class="plan-name">Pixelie Plan</div>
+                <div class="plan-price">
+                    <span class="currency">$</span>{{ plan_price }} <span style="font-size: 16px;">{{ plan_currency }}</span>
+                </div>
+                <p style="color: rgba(255, 255, 255, 0.6); margin-top: 10px; font-size: 14px;">Pago único - Acceso completo</p>
+            </div>
+            
+            <form id="payment-form">
+                <div id="card-element">
+                    <!-- Stripe Elements creará el formulario aquí -->
+                </div>
+                
+                <div id="card-errors" role="alert"></div>
+                
+                <button type="submit" id="submit-button" class="submit-button">
+                    <span id="button-text">Pagar ${{ plan_price }} {{ plan_currency }}</span>
+                </button>
+                
+                <a href="{{ url_for('benefits') }}" class="cancel-link">Cancelar</a>
+            </form>
+            
+            <div class="loading" id="loading">
+                Procesando pago...
+            </div>
+            
+            <div class="success-message" id="success-message">
+                <h3>¡Pago exitoso! 🎉</h3>
+                <p>Tu suscripción ha sido activada. Redirigiendo...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Inicializar Stripe
+        const stripe = Stripe('{{ stripe_public_key }}');
+        const elements = stripe.elements();
+        
+        // Crear elemento de tarjeta
+        const cardElement = elements.create('card', {
+            style: {
+                base: {
+                    color: '#fff',
+                    fontFamily: 'Arial, sans-serif',
+                    fontSize: '16px',
+                    '::placeholder': {
+                        color: 'rgba(255, 255, 255, 0.5)',
+                    },
+                },
+                invalid: {
+                    color: '#ff6b6b',
+                },
+            },
+        });
+        
+        cardElement.mount('#card-element');
+        
+        // Manejar errores de tarjeta
+        cardElement.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+        
+        // Manejar envío del formulario
+        const form = document.getElementById('payment-form');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const loading = document.getElementById('loading');
+        const successMessage = document.getElementById('success-message');
+        
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            // Deshabilitar botón
+            submitButton.disabled = true;
+            buttonText.textContent = 'Procesando...';
+            loading.style.display = 'block';
+            
+            try {
+                // Crear Payment Intent
+                const response = await fetch('/api/create-payment-intent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al crear el pago');
+                }
+                
+                // Confirmar pago con Stripe
+                        const { error, paymentIntent } = await stripe.confirmCardPayment(
+                    data.client_secret,
+                    {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: '{{ current_user.first_name if current_user.is_authenticated else "" }} {{ current_user.last_name if current_user.is_authenticated else "" }}',
+                                email: '{{ current_user.email if current_user.is_authenticated else "" }}',
+                            },
+                        },
+                    }
+                );
+                
+                if (error) {
+                    // Mostrar error
+                    document.getElementById('card-errors').textContent = error.message;
+                    submitButton.disabled = false;
+                    buttonText.textContent = `Pagar ${{ plan_price }} {{ plan_currency }}`;
+                    loading.style.display = 'none';
+                } else if (paymentIntent.status === 'succeeded') {
+                    // Pago exitoso
+                    form.style.display = 'none';
+                    successMessage.style.display = 'block';
+                    
+                    // Redirigir después de 2 segundos
+                    setTimeout(function() {
+                        window.location.href = '/welcome';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('card-errors').textContent = error.message || 'Error al procesar el pago';
+                submitButton.disabled = false;
+                buttonText.textContent = `Pagar ${{ plan_price }} {{ plan_currency }}`;
+                loading.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+
