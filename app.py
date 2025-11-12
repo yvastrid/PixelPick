@@ -142,8 +142,10 @@ init_db()
 
 @app.route('/')
 def index():
-    # Guardar en sesión que el usuario quiere suscribirse si hace clic en el botón
-    # Esto se manejará cuando haga clic en "Suscríbete ahora"
+    # Limpiar intención de suscribirse si el usuario viene a la página principal
+    # Esto evita redirecciones no deseadas
+    if 'intent_to_subscribe' in session:
+        session.pop('intent_to_subscribe', None)
     return render_template('index.html')
 
 @app.route('/beneficios')
@@ -154,26 +156,30 @@ def benefits():
 
 @app.route('/signin')
 def signin():
-    # Si el usuario ya está autenticado y tiene intención de suscribirse, redirigir al checkout
-    intent_to_subscribe = session.get('intent_to_subscribe', False)
+    # NO redirigir automáticamente, siempre mostrar el formulario de login
+    # El usuario debe completar el login primero
     if current_user.is_authenticated:
+        # Si ya está autenticado, verificar intención de suscribirse
+        intent_to_subscribe = session.get('intent_to_subscribe', False)
         if intent_to_subscribe:
             return redirect(url_for('checkout'))
         else:
             return redirect(url_for('welcome'))
-    # Si viene de benefits, ya tiene la intención guardada en sesión
+    # Mostrar formulario de login (no redirigir)
     return render_template('signin.html')
 
 @app.route('/login')
 def login():
-    # Si el usuario ya está autenticado y tiene intención de suscribirse, redirigir al checkout
-    intent_to_subscribe = session.get('intent_to_subscribe', False)
+    # SIEMPRE mostrar el formulario de registro primero
+    # NO redirigir automáticamente al checkout, el usuario debe completar el registro
     if current_user.is_authenticated:
+        # Solo si ya está autenticado, verificar intención de suscribirse
+        intent_to_subscribe = session.get('intent_to_subscribe', False)
         if intent_to_subscribe:
             return redirect(url_for('checkout'))
         else:
             return redirect(url_for('welcome'))
-    # Si viene de benefits, ya tiene la intención guardada en sesión
+    # Mostrar formulario de registro (el usuario debe completarlo)
     return render_template('login.html')
 
 # ==================== RUTAS PROTEGIDAS ====================
