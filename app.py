@@ -165,7 +165,15 @@ def login():
 @app.route('/welcome')
 @login_required
 def welcome():
-    return render_template('welcome.html')
+    # Verificar si el usuario tiene una suscripción activa
+    active_subscription = Subscription.query.filter_by(
+        user_id=current_user.id,
+        status='active'
+    ).first()
+    
+    has_subscription = active_subscription is not None
+    
+    return render_template('welcome.html', has_subscription=has_subscription)
 
 @app.route('/profile')
 @login_required
