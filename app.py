@@ -341,6 +341,7 @@ def register():
             return jsonify({'error': 'Este correo electrónico ya está registrado'}), 400
         
         # Crear nuevo usuario
+        logger.info(f"Creando nuevo usuario: {first_name} {last_name} ({email})")
         user = User(
             first_name=first_name,
             last_name=last_name,
@@ -348,17 +349,36 @@ def register():
         )
         user.set_password(password)
         
+        # Agregar usuario a la sesión de base de datos
+        logger.info("Agregando usuario a la sesión de base de datos...")
         db.session.add(user)
-        db.session.commit()
-        logger.info(f"Usuario registrado exitosamente: {email}")
+        
+        # Guardar en la base de datos
+        logger.info("Guardando usuario en la base de datos (commit)...")
+        try:
+            db.session.commit()
+            logger.info(f"✅ Usuario guardado exitosamente en la base de datos. ID: {user.id}, Email: {email}")
+            
+            # Verificar que el usuario se guardó correctamente
+            saved_user = User.query.filter_by(email=email).first()
+            if saved_user:
+                logger.info(f"✅ Verificación: Usuario encontrado en BD con ID {saved_user.id}")
+            else:
+                logger.error(f"❌ ERROR: Usuario no encontrado en BD después del commit!")
+        except Exception as db_error:
+            logger.error(f"❌ Error al hacer commit en la base de datos: {str(db_error)}")
+            db.session.rollback()
+            raise
         
         # Iniciar sesión automáticamente después del registro
         login_user(user, remember=True)
+        logger.info(f"✅ Sesión iniciada para usuario: {email}")
         
         # Verificar si el usuario tenía intención de suscribirse
         intent_to_subscribe = session.get('intent_to_subscribe', False)
         if intent_to_subscribe:
             session.pop('intent_to_subscribe', None)  # Limpiar la sesión
+            logger.info("Usuario tiene intención de suscribirse, redirigirá al checkout")
         
         return jsonify({
             'success': True,
