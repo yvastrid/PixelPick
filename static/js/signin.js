@@ -52,8 +52,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Login exitoso, redirigir a welcome
-                    window.location.href = '/welcome';
+                    // Si el usuario tenía intención de suscribirse, redirigir al checkout
+                    if (data.redirect_to_checkout) {
+                        window.location.href = '/checkout';
+                    } else {
+                        // Login exitoso, redirigir a welcome
+                        window.location.href = '/welcome';
+                    }
                 } else {
                     alert(data.error || 'Error al iniciar sesión');
                 }

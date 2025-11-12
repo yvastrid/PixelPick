@@ -142,22 +142,28 @@ init_db()
 
 @app.route('/')
 def index():
+    # Guardar en sesión que el usuario quiere suscribirse si hace clic en el botón
+    # Esto se manejará cuando haga clic en "Suscríbete ahora"
     return render_template('index.html')
 
 @app.route('/beneficios')
 def benefits():
+    # Guardar en sesión que el usuario quiere suscribirse
+    session['intent_to_subscribe'] = True
     return render_template('benefits.html')
 
 @app.route('/signin')
 def signin():
     if current_user.is_authenticated:
         return redirect(url_for('welcome'))
+    # Si viene de benefits, ya tiene la intención guardada en sesión
     return render_template('signin.html')
 
 @app.route('/login')
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('welcome'))
+    # Si viene de benefits, ya tiene la intención guardada en sesión
     return render_template('login.html')
 
 # ==================== RUTAS PROTEGIDAS ====================
@@ -347,10 +353,16 @@ def register():
         # Iniciar sesión automáticamente después del registro
         login_user(user, remember=True)
         
+        # Verificar si el usuario tenía intención de suscribirse
+        intent_to_subscribe = session.get('intent_to_subscribe', False)
+        if intent_to_subscribe:
+            session.pop('intent_to_subscribe', None)  # Limpiar la sesión
+        
         return jsonify({
             'success': True,
             'message': 'Usuario registrado exitosamente',
-            'user': user.to_dict()
+            'user': user.to_dict(),
+            'redirect_to_checkout': intent_to_subscribe
         }), 201
         
     except Exception as e:
@@ -385,10 +397,16 @@ def login_api():
         # Iniciar sesión
         login_user(user, remember=True)
         
+        # Verificar si el usuario tenía intención de suscribirse
+        intent_to_subscribe = session.get('intent_to_subscribe', False)
+        if intent_to_subscribe:
+            session.pop('intent_to_subscribe', None)  # Limpiar la sesión
+        
         return jsonify({
             'success': True,
             'message': 'Inicio de sesión exitoso',
-            'user': user.to_dict()
+            'user': user.to_dict(),
+            'redirect_to_checkout': intent_to_subscribe
         }), 200
         
     except Exception as e:
