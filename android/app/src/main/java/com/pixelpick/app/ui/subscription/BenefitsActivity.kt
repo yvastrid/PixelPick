@@ -203,30 +203,40 @@ class BenefitsActivity : AppCompatActivity() {
                     val subscription = statusResponse.subscription
                     val planType = subscription.planType ?: ""
                     val status = subscription.status ?: ""
-                    android.util.Log.d("BenefitsActivity", "Plan type: '$planType'")
-                    android.util.Log.d("BenefitsActivity", "Status: '$status'")
+                    android.util.Log.d("BenefitsActivity", "🔍 Plan type recibido: '$planType'")
+                    android.util.Log.d("BenefitsActivity", "🔍 Status recibido: '$status'")
+                    android.util.Log.d("BenefitsActivity", "🔍 Plan type length: ${planType.length}")
+                    android.util.Log.d("BenefitsActivity", "🔍 Plan type bytes: ${planType.toByteArray().contentToString()}")
                     
-                    // Verificar tipo de plan
-                    val isBasicPlan = planType.contains("basic", ignoreCase = true) || 
-                                     planType.contains("pixelie_basic", ignoreCase = true)
+                    // Verificar tipo de plan - comparación más estricta
+                    val isBasicPlan = planType.equals("pixelie_basic", ignoreCase = true) ||
+                                     planType.equals("pixelie_basic_plan", ignoreCase = true) ||
+                                     planType.contains("basic", ignoreCase = true)
+                    
                     // El plan premium tiene plan_type='pixelie_plan' exactamente
-                    val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) ||
-                                       (planType.contains("pixelie", ignoreCase = true) && 
-                                        !planType.contains("basic", ignoreCase = true) &&
-                                        planType.contains("plan", ignoreCase = true))
+                    val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true)
                     
-                    android.util.Log.d("BenefitsActivity", "isBasicPlan: $isBasicPlan, isPremiumPlan: $isPremiumPlan")
-                    android.util.Log.d("BenefitsActivity", "Comparación detallada:")
-                    android.util.Log.d("BenefitsActivity", "  - planType.equals('pixelie_plan'): ${planType.equals("pixelie_plan", ignoreCase = true)}")
-                    android.util.Log.d("BenefitsActivity", "  - contiene 'pixelie' y no 'basic': ${planType.contains("pixelie", ignoreCase = true) && !planType.contains("basic", ignoreCase = true)}")
+                    android.util.Log.d("BenefitsActivity", "✅ isBasicPlan: $isBasicPlan")
+                    android.util.Log.d("BenefitsActivity", "✅ isPremiumPlan: $isPremiumPlan")
+                    android.util.Log.d("BenefitsActivity", "✅ Comparación 'pixelie_plan': ${planType.equals("pixelie_plan", ignoreCase = true)}")
                     
                     // Determinar el nombre del plan
                     val planName = when {
-                        isBasicPlan -> "Pixelie Basic Plan"
-                        isPremiumPlan -> "Pixelie Plan"
-                        else -> "Pixelie Basic Plan"
+                        isPremiumPlan -> {
+                            android.util.Log.d("BenefitsActivity", "✅ Mostrando 'Pixelie Plan'")
+                            "Pixelie Plan"
+                        }
+                        isBasicPlan -> {
+                            android.util.Log.d("BenefitsActivity", "✅ Mostrando 'Pixelie Basic Plan'")
+                            "Pixelie Basic Plan"
+                        }
+                        else -> {
+                            android.util.Log.d("BenefitsActivity", "⚠️ Plan desconocido, usando básico por defecto")
+                            "Pixelie Basic Plan"
+                        }
                     }
                     
+                    android.util.Log.d("BenefitsActivity", "✅ Plan name final: '$planName'")
                     binding.activePlanName.text = planName
                     val statusText = when (subscription.status?.lowercase()) {
                         "active" -> "Activo"
