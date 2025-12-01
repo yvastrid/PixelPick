@@ -599,31 +599,41 @@ def get_profile():
         games_data = [ug.to_dict() for ug in user_games]
         
         # Estadísticas - contar solo juegos únicos con el estado más reciente
-        # Usar una consulta SQL más eficiente para obtener el estado más reciente de cada juego único
-        from sqlalchemy import func
+        # Obtener todos los game_ids únicos del usuario
+        unique_game_ids = db.session.query(UserGame.game_id).filter_by(
+            user_id=user.id
+        ).distinct().all()
+        unique_game_ids = [gid[0] for gid in unique_game_ids]
         
-        # Obtener el último registro de cada juego único (el más reciente)
-        subquery = db.session.query(
-            UserGame.game_id,
-            func.max(UserGame.last_played).label('max_date')
-        ).filter_by(user_id=user.id).group_by(UserGame.game_id).subquery()
-        
-        # Obtener los registros más recientes de cada juego único
-        latest_games = db.session.query(UserGame).join(
-            subquery,
-            (UserGame.game_id == subquery.c.game_id) & 
-            (UserGame.last_played == subquery.c.max_date)
-        ).filter_by(user_id=user.id).all()
-        
-        # Contar por estado
+        # Para cada juego único, obtener el registro más reciente y contar por estado
         completed_count = 0
         playing_count = 0
         
-        for ug in latest_games:
-            if ug.status == 'completed':
-                completed_count += 1
-            elif ug.status == 'playing':
-                playing_count += 1
+        for game_id in unique_game_ids:
+            try:
+                # Obtener el registro más reciente de este juego
+                # Primero intentar con ordenamiento normal
+                latest_game = UserGame.query.filter_by(
+                    user_id=user.id,
+                    game_id=game_id
+                ).order_by(UserGame.last_played.desc()).first()
+                
+                # Si no hay fecha, obtener cualquier registro de este juego
+                if not latest_game or not latest_game.last_played:
+                    latest_game = UserGame.query.filter_by(
+                        user_id=user.id,
+                        game_id=game_id
+                    ).first()
+                
+                if latest_game and latest_game.status:
+                    if latest_game.status == 'completed':
+                        completed_count += 1
+                    elif latest_game.status == 'playing':
+                        playing_count += 1
+            except Exception as e:
+                # Si hay un error con un juego específico, continuar con los demás
+                logger.warning(f"Error al procesar juego {game_id}: {str(e)}")
+                continue
         
         return jsonify({
             'success': True,
