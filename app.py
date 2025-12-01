@@ -591,24 +591,40 @@ def get_profile():
     try:
         user = current_user
         
-        # Obtener juegos del usuario (ordenados por última vez jugado)
-        user_games = UserGame.query.filter_by(user_id=user.id).order_by(UserGame.last_played.desc()).limit(10).all()
+        # Obtener todos los juegos del usuario ordenados por última vez jugado
+        all_user_games = UserGame.query.filter_by(user_id=user.id).order_by(UserGame.last_played.desc()).all()
+        
+        # Obtener los últimos 10 para mostrar en el historial
+        user_games = all_user_games[:10]
         games_data = [ug.to_dict() for ug in user_games]
         
-        # Estadísticas - contar solo juegos únicos por status
-        # Completados: juegos únicos con status 'completed'
-        completed_games = db.session.query(UserGame.game_id).filter_by(
-            user_id=user.id, 
-            status='completed'
-        ).distinct().all()
-        completed_count = len(completed_games)
+        # Estadísticas - contar solo juegos únicos con el estado más reciente
+        # Obtener todos los game_ids únicos del usuario
+        unique_game_ids = set()
+        game_status_map = {}  # game_id -> (status, last_played)
         
-        # Jugando: juegos únicos con status 'playing'
-        playing_games = db.session.query(UserGame.game_id).filter_by(
-            user_id=user.id, 
-            status='playing'
-        ).distinct().all()
-        playing_count = len(playing_games)
+        # Recorrer todos los juegos y guardar el estado más reciente de cada uno
+        for ug in all_user_games:
+            if ug.game_id not in game_status_map:
+                # Primera vez que vemos este juego
+                game_status_map[ug.game_id] = (ug.status, ug.last_played)
+                unique_game_ids.add(ug.game_id)
+            else:
+                # Ya existe, comparar fechas y actualizar si es más reciente
+                existing_status, existing_date = game_status_map[ug.game_id]
+                if ug.last_played and existing_date and ug.last_played > existing_date:
+                    game_status_map[ug.game_id] = (ug.status, ug.last_played)
+        
+        # Contar por estado
+        completed_count = 0
+        playing_count = 0
+        
+        for game_id in unique_game_ids:
+            status, _ = game_status_map[game_id]
+            if status == 'completed':
+                completed_count += 1
+            elif status == 'playing':
+                playing_count += 1
         
         return jsonify({
             'success': True,
