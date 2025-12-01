@@ -104,7 +104,11 @@ class LoginActivity : AppCompatActivity() {
                 showLoading(false)
                 
                 result.onSuccess { response ->
+                    android.util.Log.d("LoginActivity", "✅ Login exitoso, usuario: ${response.user?.email}")
                     Toast.makeText(this@LoginActivity, R.string.success_login, Toast.LENGTH_SHORT).show()
+                    // Esperar un momento para asegurar que la sesión esté completamente establecida
+                    // antes de verificar el plan
+                    kotlinx.coroutines.delay(1000)
                     // Verificar el plan del usuario y redirigir a la Activity correspondiente
                     checkPlanAndRedirect()
                 }.onFailure { error ->
