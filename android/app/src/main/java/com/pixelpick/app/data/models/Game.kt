@@ -25,6 +25,9 @@ data class Game(
     val gameUrl: String?,
     
     @SerializedName("category")
-    val category: String?
+    val category: String?,
+    
+    @SerializedName("recommendation_reason")
+    val recommendationReason: String? = null
 )
 

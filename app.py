@@ -809,15 +809,37 @@ def get_recommendations():
         
         # Ordenar por puntuación y tomar los mejores 3
         game_scores.sort(key=lambda x: x[1], reverse=True)
-        recommended_games = [gs[0] for gs in game_scores[:3]]
+        recommended_games_with_scores = game_scores[:3]
         
         # Asegurarse de que siempre haya 3 recomendaciones
-        if len(recommended_games) < 3:
-            recommended_ids = [g.id for g in recommended_games]
+        if len(recommended_games_with_scores) < 3:
+            recommended_ids = [gs[0].id for gs in recommended_games_with_scores]
             additional_games = [g for g in all_games if g.id not in recommended_ids]
-            recommended_games.extend(additional_games[:3 - len(recommended_games)])
+            for game in additional_games[:3 - len(recommended_games_with_scores)]:
+                recommended_games_with_scores.append((game, 0))
         
-        games_data = [game.to_dict() for game in recommended_games[:3]]
+        # Generar razones de recomendación para cada juego
+        games_data = []
+        for game, score in recommended_games_with_scores[:3]:
+            game_dict = game.to_dict()
+            
+            # Generar razón de recomendación basada en el análisis
+            reason = ""
+            if game.id not in played_game_ids:
+                if game.category and game.category.lower() in played_categories:
+                    category_name = game.category
+                    reason = f"Te gustan los juegos de {category_name}"
+                else:
+                    reason = "Nuevo juego perfecto para ti"
+            else:
+                if game.category:
+                    category_name = game.category
+                    reason = f"Basado en tu interés por {category_name}"
+                else:
+                    reason = "Recomendado según tus preferencias"
+            
+            game_dict['recommendation_reason'] = reason
+            games_data.append(game_dict)
         
         return jsonify({
             'success': True,

@@ -34,17 +34,12 @@ class RecommendationsAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(game: Game) {
-            // Establecer título del juego
+            // Establecer título del juego en gris oscuro
             binding.gameTitle.text = game.name
+            binding.gameTitle.setTextColor(android.graphics.Color.parseColor("#4A4A4A"))
             
-            // Establecer precio
-            if (game.price == 0.0) {
-                binding.gamePrice.text = "GRATIS"
-                binding.gamePrice.setTextColor(android.graphics.Color.parseColor("#FF4444"))
-            } else {
-                binding.gamePrice.text = "$${game.price}"
-                binding.gamePrice.setTextColor(android.graphics.Color.parseColor("#00D4FF"))
-            }
+            // Ocultar precio (ya no se muestra "GRATIS")
+            binding.gamePrice.visibility = View.GONE
             
             // Mostrar plataformas
             if (game.platforms != null && game.platforms.isNotEmpty()) {
@@ -72,11 +67,17 @@ class RecommendationsAdapter(
                 binding.platform2.visibility = View.GONE
             }
             
-            // Ocultar badge por defecto (se puede mostrar si es nuevo)
+            // Ocultar badge por defecto
             binding.gameBadge.visibility = View.GONE
             
-            // Ocultar razón de IA por ahora (se puede implementar después)
-            binding.aiReasonLayout.visibility = View.GONE
+            // Mostrar razón de recomendación de IA
+            val recommendationReason = game.recommendationReason
+            if (!recommendationReason.isNullOrEmpty()) {
+                binding.aiReason.text = recommendationReason
+                binding.aiReasonLayout.visibility = View.VISIBLE
+            } else {
+                binding.aiReasonLayout.visibility = View.GONE
+            }
             
             // Configurar imagen placeholder con primera letra del juego
             val firstLetter = game.name.firstOrNull()?.toString()?.uppercase() ?: "G"
