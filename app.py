@@ -1439,7 +1439,7 @@ def activate_basic_plan():
         # Crear suscripción básica
         basic_subscription = Subscription(
             user_id=current_user.id,
-            plan_type='pixelie_basic_plan',
+            plan_type='pixelie_basic',
             amount=0.00,
             currency='MXN',
             status='active',
