@@ -62,6 +62,13 @@ class MainActivity : AppCompatActivity() {
         loadCatalog()
     }
     
+    override fun onResume() {
+        super.onResume()
+        // Recargar recomendaciones cuando el usuario vuelve a la pantalla principal
+        // Esto asegura que las recomendaciones se actualicen dinámicamente
+        loadRecommendations()
+    }
+    
     private fun animateViews() {
         // Animar elementos con delay escalonado
         binding.welcomeText.alpha = 0f

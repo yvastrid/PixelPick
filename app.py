@@ -767,65 +767,55 @@ def get_recommendations():
                            'SnackAttack', 'CerealKiller', 'Munchies']
         all_games = Game.query.filter(Game.name.in_(funny_game_names)).all()
         
-        # Si el usuario no ha jugado ningún juego, recomendar los primeros 3
-        if not played_game_ids:
-            recommended_games = all_games[:3]
-        else:
-            # Analizar categorías de los juegos que ha jugado
+        # Analizar categorías de los juegos que ha jugado (si hay)
+        played_categories = {}
+        if played_game_ids:
             played_games = Game.query.filter(Game.id.in_(played_game_ids)).all()
-            played_categories = {}
-            played_categories_list = []
-            
             for game in played_games:
                 if game.category:
                     category = game.category.lower()
                     played_categories[category] = played_categories.get(category, 0) + 1
-                    if category not in played_categories_list:
-                        played_categories_list.append(category)
-            
-            # Calcular puntuación de recomendación para cada juego no jugado
-            game_scores = []
-            for game in all_games:
-                if game.id not in played_game_ids:
-                    score = 0
-                    
-                    # Puntos por categoría similar
-                    if game.category and game.category.lower() in played_categories:
-                        score += played_categories[game.category.lower()] * 10
-                    
-                    # Puntos por plataforma (si coincide)
-                    if game.platforms:
-                        platforms = game.platforms.split(',') if isinstance(game.platforms, str) else game.platforms
-                        if 'Android' in platforms:
-                            score += 5
-                    
-                    # Bonus si es gratis (mayor probabilidad de que lo pruebe)
-                    if game.price == 0.00:
-                        score += 3
-                    
-                    game_scores.append((game, score))
-            
-            # Ordenar por puntuación y tomar los mejores
-            game_scores.sort(key=lambda x: x[1], reverse=True)
-            
-            # Si hay juegos con puntuación > 0, tomar los mejores
-            # Si no, tomar juegos aleatorios que no haya jugado
-            if game_scores and game_scores[0][1] > 0:
-                recommended_games = [gs[0] for gs in game_scores[:3]]
-            else:
-                # Si no hay preferencias claras, recomendar juegos que no ha jugado
-                unplayed_games = [g for g in all_games if g.id not in played_game_ids]
-                recommended_games = unplayed_games[:3] if len(unplayed_games) >= 3 else unplayed_games
         
-        # Si no hay suficientes recomendaciones, completar con juegos aleatorios
+        # Calcular puntuación de recomendación para TODOS los juegos
+        # Las recomendaciones siempre deben estar visibles y cambiar dinámicamente
+        game_scores = []
+        for game in all_games:
+            score = 0
+            
+            # Si el usuario NO ha jugado este juego, darle más puntos
+            if game.id not in played_game_ids:
+                score += 20  # Bonus por no haberlo jugado
+            
+            # Puntos por categoría similar (si ha jugado juegos similares)
+            if game.category and game.category.lower() in played_categories:
+                score += played_categories[game.category.lower()] * 5
+            
+            # Puntos por plataforma (si coincide)
+            if game.platforms:
+                platforms = game.platforms.split(',') if isinstance(game.platforms, str) else game.platforms
+                if 'Android' in platforms:
+                    score += 3
+            
+            # Bonus si es gratis
+            if game.price == 0.00:
+                score += 2
+            
+            # Si el usuario ya lo está jugando, darle menos puntos pero aún incluirlo
+            # Esto permite que las recomendaciones cambien dinámicamente
+            if game.id in played_game_ids:
+                score -= 10  # Penalización por ya haberlo jugado
+            
+            game_scores.append((game, score))
+        
+        # Ordenar por puntuación y tomar los mejores 3
+        game_scores.sort(key=lambda x: x[1], reverse=True)
+        recommended_games = [gs[0] for gs in game_scores[:3]]
+        
+        # Asegurarse de que siempre haya 3 recomendaciones
         if len(recommended_games) < 3:
-            remaining_needed = 3 - len(recommended_games)
             recommended_ids = [g.id for g in recommended_games]
-            additional_games = Game.query.filter(
-                ~Game.id.in_(recommended_ids + played_game_ids),
-                Game.name.in_(funny_game_names)
-            ).limit(remaining_needed).all()
-            recommended_games.extend(additional_games)
+            additional_games = [g for g in all_games if g.id not in recommended_ids]
+            recommended_games.extend(additional_games[:3 - len(recommended_games)])
         
         games_data = [game.to_dict() for game in recommended_games[:3]]
         
