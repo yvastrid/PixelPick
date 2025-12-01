@@ -37,7 +37,21 @@ object RetrofitClient {
             requestBuilder.header("Accept", "application/json")
             
             val request = requestBuilder.build()
-            chain.proceed(request)
+            
+            // Logging de cookies para debug
+            val cookieHeader = request.header("Cookie")
+            android.util.Log.d("RetrofitClient", "🔍 Request URL: ${request.url}")
+            android.util.Log.d("RetrofitClient", "🔍 Cookie header: $cookieHeader")
+            
+            val response = chain.proceed(request)
+            
+            // Logging de cookies recibidas
+            val setCookieHeaders = response.headers("Set-Cookie")
+            if (setCookieHeaders.isNotEmpty()) {
+                android.util.Log.d("RetrofitClient", "🔍 Set-Cookie headers recibidos: $setCookieHeaders")
+            }
+            
+            response
         }
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
