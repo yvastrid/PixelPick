@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flootilupis - Match 3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            animation: bgShift 10s ease infinite;
+        }
+        @keyframes bgShift {
+            0%, 100% { background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%); }
+            50% { background: linear-gradient(135deg, #f093fb 0%, #764ba2 50%, #667eea 100%); }
+        }
+        .game-container {
+            text-align: center;
+            color: white;
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #ffd700, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 2s ease infinite;
+        }
+        @keyframes titleGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255,215,0,0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(255,107,107,0.8)); }
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 18px;
+            gap: 10px;
+        }
+        .score, .high-score, .moves {
+            background: rgba(255,255,255,0.25);
+            padding: 10px 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            background: rgba(0,0,0,0.4);
+            padding: 8px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .cell {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .cell::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .cell:hover::before {
+            opacity: 1;
+        }
+        .cell:hover {
+            transform: scale(1.1);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        .cell.selected {
+            background: rgba(255,255,255,0.4);
+            transform: scale(1.15);
+            box-shadow: 0 0 25px rgba(255,215,0,0.8);
+            border-color: #ffd700;
+        }
+        .cell.matched {
+            animation: explode 0.5s ease-out;
+        }
+        @keyframes explode {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.5) rotate(180deg); opacity: 0.7; }
+            100% { transform: scale(0) rotate(360deg); opacity: 0; }
+        }
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 25px;
+            display: none;
+            z-index: 1000;
+            border: 2px solid rgba(255,215,0,0.5);
+            box-shadow: 0 0 50px rgba(255,215,0,0.5);
+        }
+        .game-over.show {
+            display: block;
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        .game-over h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .final-score {
+            font-size: 48px;
+            margin: 20px 0;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255,215,0,0.8);
+        }
+        button {
+            margin: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+            border: 2px solid white;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: calc(100% - 16px);
+            max-width: 300px;
+            box-sizing: border-box;
+        }
+        button:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3));
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.3);
+        }
+        .instructions {
+            background: rgba(255,255,255,0.15);
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="game-container">
+        <h1>🍩 Flootilupis 🍩</h1>
+        <div class="instructions">
+            ¡Combina 3 o más del mismo color! Toca para seleccionar y cambiar posiciones. Tienes 30 movimientos.
+        </div>
+        <div class="score-board">
+            <div class="score">Puntos: <span id="score">0</span></div>
+            <div class="moves">Movimientos: <span id="moves">30</span></div>
+            <div class="high-score">Récord: <span id="highScore">0</span></div>
+        </div>
+        <div id="gameArea" class="grid"></div>
+        <div id="gameOver" class="game-over">
+            <h2>¡Juego Terminado!</h2>
+            <div class="final-score">Puntuación: <span id="finalScore">0</span></div>
+            <button onclick="restartGame()">Jugar de Nuevo</button>
+        </div>
+        <button id="startBtn" onclick="startGame()">¡Jugar!</button>
+    </div>
+    <script>
+        let score = 0;
+        let moves = 30;
+        let gameRunning = false;
+        let selectedCell = null;
+        let grid = [];
+        const colors = ['🍩', '🍪', '🍫', '🍬', '🍭', '🥨'];
+        const gridSize = 6;
+        
+        function getHighScore() {
+            return parseInt(localStorage.getItem('flootilupisHighScore') || '0');
+        }
+        
+        function setHighScore(score) {
+            localStorage.setItem('flootilupisHighScore', score);
+        }
+        
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        function startGame() {
+            if (gameRunning) return;
+            gameRunning = true;
+            score = 0;
+            moves = 30;
+            selectedCell = null;
+            document.getElementById('score').textContent = score;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('gameArea').innerHTML = '';
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startBtn').style.display = 'none';
+            
+            document.getElementById('highScore').textContent = getHighScore();
+            
+            initializeGrid();
+            renderGrid();
+        }
+        
+        function initializeGrid() {
+            grid = [];
+            let attempts = 0;
+            do {
+                for (let i = 0; i < gridSize; i++) {
+                    grid[i] = [];
+                    for (let j = 0; j < gridSize; j++) {
+                        grid[i][j] = colors[Math.floor(Math.random() * colors.length)];
+                    }
+                }
+                attempts++;
+                // Si después de 10 intentos aún hay matches, simplemente continuar
+                if (attempts > 10) break;
+            } while (findMatches().length > 0);
+        }
+        
+        function renderGrid() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = '';
+            
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.textContent = grid[i][j];
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    cell.onclick = () => handleCellClick(i, j, cell);
+                    gameArea.appendChild(cell);
+                }
+            }
+        }
+        
+        function handleCellClick(row, col, cellElement) {
+            if (!gameRunning) return;
+            
+            if (selectedCell === null) {
+                selectedCell = { row, col, element: cellElement };
+                cellElement.classList.add('selected');
+            } else {
+                const prevRow = selectedCell.row;
+                const prevCol = selectedCell.col;
+                
+                // Verificar si son adyacentes
+                const isAdjacent = Math.abs(row - prevRow) + Math.abs(col - prevCol) === 1;
+                
+                if (isAdjacent) {
+                    // Intercambiar
+                    [grid[row][col], grid[prevRow][prevCol]] = [grid[prevRow][prevCol], grid[row][col]];
+                    
+                    selectedCell.element.classList.remove('selected');
+                    selectedCell = null;
+                    
+                    moves--;
+                    document.getElementById('moves').textContent = moves;
+                    
+                    // Verificar matches
+                    setTimeout(() => {
+                        const matches = findMatches();
+                        if (matches.length > 0) {
+                            removeMatches();
+                            setTimeout(() => {
+                                fillGrid();
+                                setTimeout(() => {
+                                    checkMatches();
+                                }, 300);
+                            }, 500);
+                        } else {
+                            // Revertir si no hay match
+                            [grid[row][col], grid[prevRow][prevCol]] = [grid[prevRow][prevCol], grid[row][col]];
+                            renderGrid();
+                        }
+                    }, 100);
+                    
+                    if (moves <= 0) {
+                        endGame();
+                    }
+                } else {
+                    selectedCell.element.classList.remove('selected');
+                    selectedCell = { row, col, element: cellElement };
+                    cellElement.classList.add('selected');
+                }
+            }
+        }
+        
+        function findMatches() {
+            const matches = [];
+            
+            // Horizontal
+            for (let i = 0; i < gridSize; i++) {
+                let count = 1;
+                let start = 0;
+                for (let j = 1; j < gridSize; j++) {
+                    if (grid[i][j] === grid[i][j-1]) {
+                        count++;
+                    } else {
+                        if (count >= 3) {
+                            for (let k = start; k < j; k++) {
+                                matches.push({row: i, col: k});
+                            }
+                        }
+                        count = 1;
+                        start = j;
+                    }
+                }
+                if (count >= 3) {
+                    for (let k = start; k < gridSize; k++) {
+                        matches.push({row: i, col: k});
+                    }
+                }
+            }
+            
+            // Vertical
+            for (let j = 0; j < gridSize; j++) {
+                let count = 1;
+                let start = 0;
+                for (let i = 1; i < gridSize; i++) {
+                    if (grid[i][j] === grid[i-1][j]) {
+                        count++;
+                    } else {
+                        if (count >= 3) {
+                            for (let k = start; k < i; k++) {
+                                matches.push({row: k, col: j});
+                            }
+                        }
+                        count = 1;
+                        start = i;
+                    }
+                }
+                if (count >= 3) {
+                    for (let k = start; k < gridSize; k++) {
+                        matches.push({row: k, col: j});
+                    }
+                }
+            }
+            
+            return matches;
+        }
+        
+        let isRemovingMatches = false;
+        
+        function removeMatches() {
+            if (isRemovingMatches) return;
+            isRemovingMatches = true;
+            const matches = findMatches();
+            const uniqueMatches = [];
+            const seen = new Set();
+            
+            matches.forEach(match => {
+                const key = `${match.row}-${match.col}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueMatches.push(match);
+                }
+            });
+            
+            uniqueMatches.forEach(match => {
+                score += 10;
+                const cell = document.querySelector(`[data-row="${match.row}"][data-col="${match.col}"]`);
+                if (cell) {
+                    cell.classList.add('matched');
+                    setTimeout(() => {
+                        grid[match.row][match.col] = null;
+                    }, 250);
+                }
+            });
+            document.getElementById('score').textContent = score;
+            setTimeout(() => {
+                isRemovingMatches = false;
+            }, 500);
+        }
+        
+        function fillGrid() {
+            // Hacer caer elementos
+            for (let j = 0; j < gridSize; j++) {
+                let writeIndex = gridSize - 1;
+                for (let i = gridSize - 1; i >= 0; i--) {
+                    if (grid[i][j] !== null) {
+                        grid[writeIndex][j] = grid[i][j];
+                        if (writeIndex !== i) grid[i][j] = null;
+                        writeIndex--;
+                    }
+                }
+                // Llenar espacios vacíos
+                for (let i = writeIndex; i >= 0; i--) {
+                    grid[i][j] = colors[Math.floor(Math.random() * colors.length)];
+                }
+            }
+            renderGrid();
+        }
+        
+        function checkMatches() {
+            setTimeout(() => {
+                if (!gameRunning) return;
+                const matches = findMatches();
+                if (matches.length > 0) {
+                    removeMatches();
+                    setTimeout(() => {
+                        fillGrid();
+                        setTimeout(() => {
+                            checkMatches();
+                        }, 300);
+                    }, 500);
+                }
+            }, 300);
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            
+            const highScore = getHighScore();
+            if (score > highScore) {
+                setHighScore(score);
+                document.getElementById('highScore').textContent = score;
+            }
+            
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').classList.add('show');
+            document.getElementById('startBtn').style.display = 'block';
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOver').classList.remove('show');
+            startGame();
+        }
+        
+        createParticles();
+    </script>
+</body>
+</html>

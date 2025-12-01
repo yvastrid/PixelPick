@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Munchies</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .game-container {
+            text-align: center;
+            color: white;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .score, .high-score {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            max-width: 100%;
+            margin: 20px auto;
+        }
+        .tile {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        .tile:hover {
+            transform: scale(1.1);
+            background: rgba(255,255,255,0.4);
+        }
+        .tile.matched {
+            opacity: 0.3;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+        .tile.selected {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 40px;
+            border-radius: 20px;
+            display: none;
+            z-index: 1000;
+        }
+        .game-over.show {
+            display: block;
+        }
+        .game-over h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+        .final-score {
+            font-size: 48px;
+            margin: 20px 0;
+            color: #ffe66d;
+        }
+        button {
+            margin: 10px;
+            padding: 15px 30px;
+            font-size: 18px;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid white;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.05);
+        }
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .timer {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #ffe66d;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🍬 Munchies 🍬</h1>
+        <div class="instructions">
+            ¡Encuentra todos los pares! Toca dos tiles para voltearlas. Tienes 60 segundos.
+        </div>
+        <div class="score-board">
+            <div class="score">Pares: <span id="score">0</span> / 8</div>
+            <div class="high-score">Récord: <span id="highScore">0</span></div>
+        </div>
+        <div class="timer">Tiempo: <span id="timer">60</span>s</div>
+        <div id="gameArea" class="grid"></div>
+        <div id="gameOver" class="game-over">
+            <h2>¡Juego Terminado!</h2>
+            <div class="final-score">Puntuación: <span id="finalScore">0</span></div>
+            <button onclick="restartGame()">Jugar de Nuevo</button>
+        </div>
+        <button id="startBtn" onclick="startGame()">¡Jugar!</button>
+    </div>
+    <script>
+        let score = 0;
+        let matchedPairs = 0;
+        let selectedTiles = [];
+        let gameRunning = false;
+        let timeLeft = 60;
+        let timerInterval;
+        const snacks = ['🍪', '🍫', '🍭', '🍩', '🍰', '🍬', '🥨', '🍕'];
+        
+        function getHighScore() {
+            return parseInt(localStorage.getItem('munchiesHighScore') || '0');
+        }
+        
+        function setHighScore(score) {
+            localStorage.setItem('munchiesHighScore', score);
+        }
+        
+        function startGame() {
+            if (gameRunning) return;
+            gameRunning = true;
+            score = 0;
+            matchedPairs = 0;
+            selectedTiles = [];
+            timeLeft = 60;
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('gameArea').innerHTML = '';
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startBtn').style.display = 'none';
+            
+            document.getElementById('highScore').textContent = getHighScore();
+            
+            const gameTiles = [...snacks, ...snacks].sort(() => Math.random() - 0.5);
+            
+            gameTiles.forEach((snack, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.dataset.snack = snack;
+                tile.dataset.index = index;
+                tile.textContent = '?';
+                
+                tile.onclick = function() {
+                    if (!gameRunning) return;
+                    if (this.classList.contains('matched') || selectedTiles.length === 2) return;
+                    if (selectedTiles.includes(this)) return;
+                    
+                    this.textContent = this.dataset.snack;
+                    this.classList.add('selected');
+                    selectedTiles.push(this);
+                    
+                    if (selectedTiles.length === 2) {
+                        setTimeout(checkMatch, 500);
+                    }
+                };
+                
+                document.getElementById('gameArea').appendChild(tile);
+            });
+            
+            timerInterval = setInterval(() => {
+                if (!gameRunning) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                timeLeft--;
+                document.getElementById('timer').textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        function checkMatch() {
+            const [tile1, tile2] = selectedTiles;
+            
+            if (tile1.dataset.snack === tile2.dataset.snack) {
+                tile1.classList.add('matched');
+                tile2.classList.add('matched');
+                matchedPairs++;
+                score = matchedPairs * 100;
+                document.getElementById('score').textContent = matchedPairs;
+                
+                if (matchedPairs === 8) {
+                    score += timeLeft * 10; // Bonus por tiempo restante
+                    endGame();
+                }
+            } else {
+                tile1.textContent = '?';
+                tile2.textContent = '?';
+            }
+            
+            tile1.classList.remove('selected');
+            tile2.classList.remove('selected');
+            selectedTiles = [];
+        }
+        
+        function endGame() {
+            gameRunning = false;
+            clearInterval(timerInterval);
+            
+            const finalScore = score + (matchedPairs === 8 ? timeLeft * 10 : 0);
+            
+            const highScore = getHighScore();
+            if (finalScore > highScore) {
+                setHighScore(finalScore);
+                document.getElementById('highScore').textContent = finalScore;
+            }
+            
+            document.getElementById('finalScore').textContent = finalScore;
+            document.getElementById('gameOver').classList.add('show');
+            document.getElementById('startBtn').style.display = 'block';
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOver').classList.remove('show');
+            startGame();
+        }
+    </script>
+</body>
+</html>

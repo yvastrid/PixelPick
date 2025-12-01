@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CerealKiller - Flow Free</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        .game-container {
+            text-align: center;
+            color: white;
+            width: 100%;
+            max-width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            background: linear-gradient(45deg, #ffd700, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 16px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .score, .high-score, .moves {
+            background: rgba(255,255,255,0.25);
+            padding: 8px 12px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .game-area {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .grid {
+            display: grid;
+            gap: 3px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 5px;
+            margin: 0 auto;
+        }
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .cell:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .cell.dot {
+            border-radius: 50%;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+        .cell.path {
+            background: var(--path-color);
+            box-shadow: 0 0 15px var(--path-color), inset 0 0 10px rgba(255,255,255,0.3);
+            position: relative;
+        }
+        .cell.path::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%);
+            border-radius: 5px;
+        }
+        .cell.path-line {
+            background: var(--path-color);
+            opacity: 0.8;
+            box-shadow: 0 0 10px var(--path-color);
+        }
+        .cell.path-line.horizontal {
+            border-left: 3px solid var(--path-color);
+            border-right: 3px solid var(--path-color);
+        }
+        .cell.path-line.vertical {
+            border-top: 3px solid var(--path-color);
+            border-bottom: 3px solid var(--path-color);
+        }
+        .cell.path-line.corner {
+            background: var(--path-color);
+            border-radius: 0;
+        }
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 25px;
+            display: none;
+            z-index: 1000;
+            border: 3px solid rgba(255,215,0,0.5);
+            box-shadow: 0 0 50px rgba(255,215,0,0.5);
+        }
+        .game-over.show {
+            display: block;
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        .game-over h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+        .final-score {
+            font-size: 48px;
+            margin: 20px 0;
+            color: #ffd700;
+        }
+        button {
+            margin: 8px;
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+            border: 2px solid white;
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: calc(100% - 16px);
+            max-width: 300px;
+            box-sizing: border-box;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        .instructions {
+            background: rgba(255,255,255,0.15);
+            padding: 12px;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            backdrop-filter: blur(10px);
+        }
+        .reset-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🥣 CerealKiller 🥣</h1>
+        <div class="instructions">
+            ¡Une los puntos del mismo color! Toca y arrastra para crear el camino. No pueden cruzarse.
+        </div>
+        <div class="score-board">
+            <div class="score">Pares: <span id="score">0</span>/<span id="totalPairs">0</span></div>
+            <div class="moves">Movimientos: <span id="moves">0</span></div>
+            <div class="high-score">Récord: <span id="highScore">0</span></div>
+        </div>
+        <div id="gameArea" class="game-area">
+            <div id="grid" class="grid"></div>
+        </div>
+        <button class="reset-btn" onclick="resetGame()">Reiniciar</button>
+        <div id="gameOver" class="game-over">
+            <h2>¡Completado!</h2>
+            <div class="final-score">Movimientos: <span id="finalScore">0</span></div>
+            <button onclick="restartGame()">Jugar de Nuevo</button>
+        </div>
+        <button id="startBtn" onclick="startGame()">¡Jugar!</button>
+    </div>
+    <script>
+        const GRID_SIZE = 6;
+        const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#a8e6cf', '#ffd93d'];
+        const emojis = ['🔴', '🔵', '🟡', '🟢', '🟣', '🟠'];
+        
+        let grid = [];
+        let pairs = [];
+        let paths = {};
+        let selectedColor = null;
+        let currentPath = [];
+        let score = 0;
+        let moves = 0;
+        let gameRunning = false;
+        let currentLevel = 1;
+        let totalPairsToComplete = 3;
+        
+        function getHighScore() {
+            return parseInt(localStorage.getItem('cerealkillerHighScore') || '0');
+        }
+        
+        function setHighScore(moves) {
+            localStorage.setItem('cerealkillerHighScore', moves);
+        }
+        
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            moves = 0;
+            currentLevel = 1;
+            totalPairsToComplete = 3;
+            paths = {};
+            currentPath = [];
+            selectedColor = null;
+            document.getElementById('score').textContent = score;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startBtn').style.display = 'none';
+            
+            document.getElementById('highScore').textContent = getHighScore();
+            
+            initializeGame();
+            render();
+        }
+        
+        function initializeGame() {
+            // Crear grid vacío
+            grid = [];
+            for (let i = 0; i < GRID_SIZE; i++) {
+                grid[i] = [];
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    grid[i][j] = { type: 'empty', color: null };
+                }
+            }
+            
+            // Colocar pares de puntos aleatoriamente
+            pairs = [];
+            const numPairs = totalPairsToComplete;
+            const usedPositions = new Set();
+            
+            for (let i = 0; i < numPairs; i++) {
+                const color = colors[i % colors.length];
+                const emoji = emojis[i % emojis.length];
+                
+                // Encontrar dos posiciones aleatorias
+                let pos1, pos2;
+                let attempts = 0;
+                do {
+                    pos1 = Math.floor(Math.random() * GRID_SIZE * GRID_SIZE);
+                    attempts++;
+                } while (usedPositions.has(pos1) && attempts < 50);
+                usedPositions.add(pos1);
+                
+                attempts = 0;
+                do {
+                    pos2 = Math.floor(Math.random() * GRID_SIZE * GRID_SIZE);
+                    attempts++;
+                } while (usedPositions.has(pos2) && attempts < 50);
+                usedPositions.add(pos2);
+                
+                const row1 = Math.floor(pos1 / GRID_SIZE);
+                const col1 = pos1 % GRID_SIZE;
+                const row2 = Math.floor(pos2 / GRID_SIZE);
+                const col2 = pos2 % GRID_SIZE;
+                
+                grid[row1][col1] = { type: 'dot', color: color, emoji: emoji, pairIndex: i };
+                grid[row2][col2] = { type: 'dot', color: color, emoji: emoji, pairIndex: i };
+                
+                pairs.push({
+                    color: color,
+                    emoji: emoji,
+                    start: { row: row1, col: col1 },
+                    end: { row: row2, col: col2 },
+                    connected: false
+                });
+            }
+            
+            document.getElementById('totalPairs').textContent = numPairs;
+        }
+        
+        function render() {
+            const gridElement = document.getElementById('grid');
+            gridElement.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+            gridElement.innerHTML = '';
+            
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    
+                    const cellData = grid[i][j];
+                    
+                    if (cellData.type === 'dot') {
+                        cell.classList.add('dot');
+                        cell.style.setProperty('--path-color', cellData.color);
+                        cell.style.backgroundColor = cellData.color;
+                        cell.textContent = cellData.emoji;
+                    } else if (cellData.type === 'path' || cellData.type === 'path-line') {
+                        cell.classList.add('path-line');
+                        cell.style.setProperty('--path-color', cellData.color);
+                        if (cellData.direction) {
+                            cell.classList.add(cellData.direction);
+                        }
+                    }
+                    
+                    cell.addEventListener('mousedown', () => handleCellStart(i, j));
+                    cell.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        handleCellStart(i, j);
+                    });
+                    cell.addEventListener('mouseenter', () => handleCellEnter(i, j));
+                    cell.addEventListener('touchmove', (e) => {
+                        e.preventDefault();
+                        const touch = e.touches[0];
+                        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                        if (element && element.dataset.row !== undefined) {
+                            handleCellEnter(parseInt(element.dataset.row), parseInt(element.dataset.col));
+                        }
+                    });
+                    cell.addEventListener('mouseup', () => handleCellEnd());
+                    cell.addEventListener('touchend', () => handleCellEnd());
+                    
+                    gridElement.appendChild(cell);
+                }
+            }
+        }
+        
+        function handleCellStart(row, col) {
+            if (!gameRunning) return;
+            const cellData = grid[row][col];
+            
+            if (cellData.type === 'dot') {
+                selectedColor = cellData.color;
+                currentPath = [{ row, col }];
+                paths[selectedColor] = [{ row, col }];
+            }
+        }
+        
+        function handleCellEnter(row, col) {
+            if (!gameRunning || !selectedColor) return;
+            
+            const cellData = grid[row][col];
+            const lastCell = currentPath[currentPath.length - 1];
+            
+            if (!lastCell) return;
+            
+            // Verificar que es adyacente
+            const rowDiff = Math.abs(row - lastCell.row);
+            const colDiff = Math.abs(col - lastCell.col);
+            if (rowDiff + colDiff !== 1) return;
+            
+            // Verificar que no cruza otro camino
+            if ((cellData.type === 'path-line' || cellData.type === 'path') && cellData.color !== selectedColor) {
+                return;
+            }
+            
+            // Verificar si llegamos al punto final
+            if (cellData.type === 'dot' && cellData.color === selectedColor) {
+                // Completar el camino
+                currentPath.push({ row, col });
+                paths[selectedColor] = [...currentPath];
+                
+                // Dibujar todas las líneas del camino
+                drawPath(selectedColor, paths[selectedColor]);
+                
+                completePath(selectedColor);
+                selectedColor = null;
+                currentPath = [];
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                checkWin();
+                return;
+            }
+            
+            // Agregar al camino
+            if (cellData.type === 'empty' || (cellData.type === 'path-line' && cellData.color === selectedColor)) {
+                // Remover camino anterior si existe
+                if (paths[selectedColor]) {
+                    paths[selectedColor].forEach(cell => {
+                        if (grid[cell.row][cell.col].type === 'path-line' || grid[cell.row][cell.col].type === 'path') {
+                            grid[cell.row][cell.col] = { type: 'empty', color: null };
+                        }
+                    });
+                }
+                
+                currentPath.push({ row, col });
+                paths[selectedColor] = [...currentPath];
+                
+                // Dibujar el camino completo
+                drawPath(selectedColor, currentPath);
+                
+                render();
+            }
+        }
+        
+        function drawPath(color, path) {
+            if (!path || path.length < 2) return;
+            
+            for (let i = 1; i < path.length; i++) {
+                const prevCell = path[i - 1];
+                const currCell = path[i];
+                
+                // Determinar dirección
+                let direction = '';
+                if (currCell.row === prevCell.row) {
+                    direction = 'horizontal';
+                } else {
+                    direction = 'vertical';
+                }
+                
+                // Marcar como path-line
+                if (grid[currCell.row][currCell.col].type !== 'dot') {
+                    grid[currCell.row][currCell.col] = { 
+                        type: 'path-line', 
+                        color: color, 
+                        direction: direction 
+                    };
+                }
+            }
+        }
+        
+        function handleCellEnd() {
+            if (!gameRunning || !selectedColor) return;
+            
+            // Si el camino no está completo, eliminarlo
+            const path = paths[selectedColor];
+            if (path && path.length > 0) {
+                const lastCell = path[path.length - 1];
+                const cellData = grid[lastCell.row][lastCell.col];
+                
+                if (cellData.type !== 'dot' || cellData.color !== selectedColor) {
+                    // No llegó al punto final, eliminar camino
+                    path.forEach(cell => {
+                        if (grid[cell.row][cell.col].type === 'path-line' || grid[cell.row][cell.col].type === 'path') {
+                            grid[cell.row][cell.col] = { type: 'empty', color: null };
+                        }
+                    });
+                    delete paths[selectedColor];
+                    render();
+                }
+            }
+            
+            selectedColor = null;
+            currentPath = [];
+        }
+        
+        function completePath(color) {
+            const path = paths[color];
+            if (path && path.length > 0) {
+                const pair = pairs.find(p => p.color === color);
+                if (pair) {
+                    pair.connected = true;
+                    score++;
+                    document.getElementById('score').textContent = score;
+                }
+            }
+        }
+        
+        function checkWin() {
+            if (score === pairs.length) {
+                setTimeout(() => {
+                    // Aumentar dificultad para la siguiente ronda
+                    currentLevel++;
+                    totalPairsToComplete = Math.min(2 + currentLevel, 6); // Empieza en 3, luego 4, 5, 6...
+                    
+                    // Reiniciar para el siguiente nivel
+                    score = 0;
+                    moves = 0;
+                    paths = {};
+                    currentPath = [];
+                    selectedColor = null;
+                    
+                    document.getElementById('score').textContent = score;
+                    document.getElementById('moves').textContent = moves;
+                    
+                    initializeGame();
+                    render();
+                    
+                    // Mostrar mensaje de nivel completado
+                    setTimeout(() => {
+                        alert(`¡Nivel ${currentLevel - 1} completado! Ahora hay ${totalPairsToComplete} pares para unir.`);
+                    }, 300);
+                }, 500);
+            }
+        }
+        
+        function resetGame() {
+            if (!gameRunning) return;
+            paths = {};
+            currentPath = [];
+            selectedColor = null;
+            
+            // Limpiar todos los caminos
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j].type === 'path' || grid[i][j].type === 'path-line') {
+                        grid[i][j] = { type: 'empty', color: null };
+                    }
+                }
+            }
+            
+            pairs.forEach(pair => pair.connected = false);
+            score = 0;
+            moves = 0;
+            document.getElementById('score').textContent = score;
+            document.getElementById('moves').textContent = moves;
+            render();
+        }
+        
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            moves = 0;
+            currentLevel = 1;
+            totalPairsToComplete = 3;
+            paths = {};
+            currentPath = [];
+            selectedColor = null;
+            document.getElementById('score').textContent = score;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('gameOver').classList.remove('show');
+            document.getElementById('startBtn').style.display = 'none';
+            
+            document.getElementById('highScore').textContent = getHighScore();
+            
+            initializeGame();
+            render();
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOver').classList.remove('show');
+            startGame();
+        }
+        
+        // Prevenir scroll en móviles
+        document.addEventListener('touchmove', (e) => {
+            if (gameRunning) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>

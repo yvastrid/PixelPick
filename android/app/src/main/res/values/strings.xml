@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PixelPick</string>
+    
+    <!-- Auth -->
+    <string name="login">Iniciar Sesión</string>
+    <string name="register">Registrarse</string>
+    <string name="email">Correo electrónico</string>
+    <string name="password">Contraseña</string>
+    <string name="first_name">Nombre</string>
+    <string name="last_name">Apellido</string>
+    <string name="welcome_back">Bienvenido de vuelta</string>
+    <string name="welcome_to_pixelpick">Bienvenido a PixelPick</string>
+    <string name="login_subtitle">Inicia sesión para continuar tu aventura gaming</string>
+    <string name="register_subtitle">Tus credenciales se usan solo para autenticación</string>
+    <string name="terms_acceptance">Acepto los Términos de servicio y Políticas de privacidad</string>
+    <string name="no_account">¿No tienes una cuenta? Regístrate aquí</string>
+    <string name="have_account">¿Ya tienes una cuenta? Inicia sesión aquí</string>
+    
+    <!-- Home -->
+    <string name="discover_next_game">Descubre tu próximo juego favorito</string>
+    <string name="ai_recommendations">Recomendaciones personalizadas impulsadas por IA</string>
+    <string name="subscribe_now">Suscríbete ahora</string>
+    <string name="games">Juegos</string>
+    <string name="recommendations">Recomendaciones</string>
+    <string name="my_games">Mis Juegos</string>
+    
+    <!-- Profile -->
+    <string name="profile">Perfil</string>
+    <string name="settings">Configuración</string>
+    <string name="edit_profile">Editar Perfil</string>
+    <string name="logout">Cerrar Sesión</string>
+    <string name="delete_account">Eliminar Cuenta</string>
+    <string name="completed_games">Juegos Completados</string>
+    <string name="playing_games">Jugando</string>
+    
+    <!-- Settings -->
+    <string name="change_name">Cambiar Nombre</string>
+    <string name="changes_remaining">Cambios restantes: %d</string>
+    <string name="save">Guardar</string>
+    <string name="cancel">Cancelar</string>
+    
+    <!-- Errors -->
+    <string name="error_network">Error de conexión. Verifica tu internet.</string>
+    <string name="error_login">Email o contraseña incorrectos</string>
+    <string name="error_register">Error al registrar. Intenta nuevamente.</string>
+    <string name="error_required_fields">Todos los campos son requeridos</string>
+    <string name="error_password_length">La contraseña debe tener al menos 8 caracteres</string>
+    <string name="error_email_exists">Este correo electrónico ya está registrado</string>
+    <string name="error_terms">Debes aceptar los términos de servicio</string>
+    
+    <!-- Success -->
+    <string name="success_register">Usuario registrado exitosamente</string>
+    <string name="success_login">Inicio de sesión exitoso</string>
+    <string name="success_profile_update">Perfil actualizado correctamente</string>
+    
+    <!-- Loading -->
+    <string name="loading">Cargando...</string>
+    <string name="please_wait">Por favor espera</string>
+</resources>
+

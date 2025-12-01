@@ -282,9 +282,12 @@ function loadCatalog() {
         .then(data => {
             if (data.success && data.games) {
                 // Filtrar solo los 5 juegos chistosos (gratuitos)
-                const funnyGameNames = ['Flootilupis', 'Chocopops', 'SnackAttack', 'CerealKiller', 'Munchies'];
+                const funnyGameNames = ['Frootilupis Match', 'Chocopops Volador', 'SnackAttack Laberinto', 'CerealKiller Connect', 'Munchies Memory'];
+                // También incluir nombres antiguos para compatibilidad
+                const oldFunnyGameNames = ['Flootilupis', 'Chocopops', 'SnackAttack', 'CerealKiller', 'Munchies'];
+                const allFunnyGameNames = funnyGameNames.concat(oldFunnyGameNames);
                 const catalogGames = data.games.filter(game => 
-                    game.price === 0 && funnyGameNames.includes(game.name)
+                    game.price === 0 && allFunnyGameNames.includes(game.name)
                 );
                 
                 const catalogGrid = document.querySelector('.catalog-grid');

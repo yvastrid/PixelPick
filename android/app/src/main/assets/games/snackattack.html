@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnackAttack - Pac-Man Style</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000000;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0;
+            margin: 0;
+        }
+        .game-container {
+            text-align: center;
+            color: #FFD700;
+            width: 100%;
+            max-width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: flex-start;
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px #FFD700;
+            color: #FFD700;
+            font-family: 'Courier New', monospace;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .score, .high-score, .lives {
+            background: rgba(0,0,0,0.8);
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 2px solid #FFD700;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+            font-family: 'Courier New', monospace;
+            flex: 1;
+            min-width: 0;
+        }
+        .game-area {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 10px;
+            background: #000000;
+            border-radius: 10px;
+            padding: 8px;
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+            border: 3px solid #FF00FF;
+            height: 55vh;
+            max-height: 450px;
+            min-height: 350px;
+            overflow: hidden;
+        }
+        .maze {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .wall {
+            position: absolute;
+            background: #FF00FF;
+            box-shadow: 0 0 5px #FF00FF;
+        }
+        .dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 5px #FFD700;
+        }
+        .power-pellet {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #FFD700;
+            animation: pulse 1s ease infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        .player {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #FFD700;
+            border-radius: 2px;
+            box-shadow: 0 0 15px #FFD700;
+            z-index: 100;
+            transition: all 0.1s linear;
+        }
+        .player::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            border-radius: 2px;
+        }
+        .ghost {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50% 50% 0 0;
+            box-shadow: 0 0 10px currentColor;
+            z-index: 50;
+            transition: all 0.15s linear;
+            display: block;
+            visibility: visible;
+        }
+        .ghost::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0px,
+                transparent 4px,
+                currentColor 4px,
+                currentColor 6px
+            );
+        }
+        .ghost.red { background: #FF4444; color: #FF4444; }
+        .ghost.blue { background: #4444FF; color: #4444FF; }
+        .ghost.pink { background: #FF44FF; color: #FF44FF; }
+        .ghost.orange { background: #FF8844; color: #FF8844; }
+        .ghost.scared {
+            background: #0000FF !important;
+            color: #0000FF !important;
+            animation: scaredGhost 0.5s ease infinite;
+        }
+        @keyframes scaredGhost {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .game-over {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 25px;
+            display: none;
+            z-index: 2000;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 50px rgba(255,215,0,0.5);
+        }
+        .game-over.show {
+            display: block;
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        .game-over h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ffd700;
+        }
+        .final-score {
+            font-size: 48px;
+            margin: 20px 0;
+            color: #ffd700;
+        }
+        button {
+            margin: 6px;
+            padding: 10px 20px;
+            font-size: 14px;
+            background: #FFD700;
+            border: 2px solid #000;
+            color: #000;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: calc(100% - 12px);
+            max-width: 280px;
+            box-sizing: border-box;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        button:hover, button:active {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px #FFD700;
+            background: #FFC700;
+        }
+        .instructions {
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            border: 2px solid #FFD700;
+            color: #FFD700;
+            font-family: 'Courier New', monospace;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            max-width: 180px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .control-btn {
+            padding: 12px;
+            background: rgba(255,215,0,0.2);
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            color: #FFD700;
+            font-size: 18px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+        }
+        .control-btn:active {
+            background: rgba(255,215,0,0.4);
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🍿 SnackAttack 🍿</h1>
+        <div class="instructions">
+            Usa los controles para moverte. Recolecta todos los puntos para ganar. Evita los fantasmas.
+        </div>
+        <div class="score-board">
+            <div class="score">Puntos: <span id="score">0</span></div>
+            <div class="lives">Vidas: <span id="lives">3</span> | Nivel: <span id="levelDisplay">1</span></div>
+            <div class="high-score">Récord: <span id="highScore">0</span></div>
+        </div>
+        <div id="gameArea" class="game-area">
+            <div id="maze" class="maze"></div>
+        </div>
+        <div class="controls">
+            <div></div>
+            <div class="control-btn" onclick="movePlayer('up')">↑</div>
+            <div></div>
+            <div class="control-btn" onclick="movePlayer('left')">←</div>
+            <div class="control-btn" onclick="movePlayer('down')">↓</div>
+            <div class="control-btn" onclick="movePlayer('right')">→</div>
+        </div>
+        <div id="gameOver" class="game-over">
+            <h2 id="gameOverTitle">¡Game Over!</h2>
+            <div class="final-score">Puntos: <span id="finalScore">0</span></div>
+            <button id="restartBtn" onclick="restartGame()">Siguiente Nivel</button>
+        </div>
+        <button id="startBtn" onclick="startGame()" style="display: block; cursor: pointer;">¡Jugar!</button>
+    </div>
+    <script>
+        const CELL_SIZE = 20;
+        const MAZE_WIDTH = 19;
+        const MAZE_HEIGHT = 21;
+        
+        // Diferentes diseños de laberinto para cada nivel
+        const mazeLayouts = [
+            // Nivel 1 - Laberinto clásico
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1],
+                [1,3,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,3,1],
+                [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+                [1,2,1,1,1,2,1,2,1,1,1,2,1,2,1,1,1,2,1],
+                [1,2,2,2,2,2,1,2,2,1,2,2,1,2,2,2,2,2,1],
+                [1,1,1,1,1,2,1,1,1,0,1,1,1,2,1,1,1,1,1],
+                [0,0,0,0,1,2,1,0,0,0,0,0,1,2,1,0,0,0,0],
+                [1,1,1,1,1,2,1,0,1,1,1,0,1,2,1,1,1,1,1],
+                [0,0,0,0,0,2,0,0,1,0,1,0,0,2,0,0,0,0,0],
+                [1,1,1,1,1,2,1,0,1,1,1,0,1,2,1,1,1,1,1],
+                [0,0,0,0,1,2,1,0,0,0,0,0,1,2,1,0,0,0,0],
+                [1,1,1,1,1,2,1,0,1,1,1,0,1,2,1,1,1,1,1],
+                [1,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,2,1],
+                [1,2,1,1,1,2,1,1,1,1,1,1,1,2,1,1,1,2,1],
+                [1,3,2,2,1,2,2,2,2,1,2,2,2,2,1,2,2,3,1],
+                [1,1,1,2,1,2,1,1,1,1,1,1,1,2,1,2,1,1,1],
+                [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+                [1,2,1,1,1,1,1,2,1,1,1,2,1,1,1,1,1,2,1],
+                [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Nivel 2 - Más pasillos estrechos
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,2,2,1,2,2,2,2,1,2,2,2,2,1,2,2,2,1],
+                [1,3,1,2,1,2,1,1,2,1,2,1,1,2,1,2,1,3,1],
+                [1,2,1,2,2,2,1,2,2,2,2,2,1,2,2,2,1,2,1],
+                [1,2,2,2,1,1,1,2,1,1,1,2,1,1,1,2,2,2,1],
+                [1,1,1,2,2,2,2,2,1,1,1,2,2,2,2,2,1,1,1],
+                [0,0,1,2,1,1,1,2,1,0,1,2,1,1,1,2,1,0,0],
+                [1,1,1,2,1,2,2,2,1,0,1,2,2,2,1,2,1,1,1],
+                [0,0,0,2,2,2,1,1,1,0,1,1,1,2,2,2,0,0,0],
+                [1,1,1,1,1,2,1,0,0,0,0,0,1,2,1,1,1,1,1],
+                [0,0,0,0,2,2,1,0,1,1,1,0,1,2,2,0,0,0,0],
+                [1,1,1,1,1,2,1,0,1,0,1,0,1,2,1,1,1,1,1],
+                [1,2,2,2,2,2,2,2,1,0,1,2,2,2,2,2,2,2,1],
+                [1,2,1,1,1,2,1,2,1,1,1,2,1,2,1,1,1,2,1],
+                [1,2,2,2,1,2,1,2,2,1,2,2,1,2,1,2,2,2,1],
+                [1,1,1,2,1,2,1,1,2,1,2,1,1,2,1,2,1,1,1],
+                [1,3,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,3,1],
+                [1,2,1,1,1,1,1,1,2,1,2,1,1,1,1,1,1,2,1],
+                [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+                [1,2,1,1,1,1,1,2,1,1,1,2,1,1,1,1,1,2,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Nivel 3 - Laberinto más complejo
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,2,2,1,2,2,2,1,2,1,2,1,2,2,2,1,2,1],
+                [1,3,1,2,2,2,1,2,1,2,1,2,1,2,1,2,2,3,1],
+                [1,2,1,2,1,1,1,2,2,2,2,2,2,2,1,1,1,2,1],
+                [1,2,2,2,1,2,2,2,1,1,1,1,1,2,2,2,1,2,1],
+                [1,1,1,2,1,2,1,2,1,2,2,2,1,2,1,2,1,1,1],
+                [0,0,1,2,2,2,1,2,1,2,1,2,1,2,1,2,2,0,0],
+                [1,1,1,1,1,2,1,2,2,2,2,2,2,2,1,2,1,1,1],
+                [0,0,0,0,2,2,1,1,1,0,0,0,1,1,1,2,2,0,0],
+                [1,1,1,1,1,2,1,0,0,0,0,0,0,0,1,2,1,1,1],
+                [0,0,0,0,2,2,1,0,1,1,1,1,1,0,1,2,2,0,0],
+                [1,1,1,1,1,2,1,0,1,0,0,0,1,0,1,2,1,1,1],
+                [1,2,2,2,2,2,2,2,1,0,0,0,1,2,2,2,2,2,1],
+                [1,2,1,1,1,2,1,2,1,1,1,1,1,2,1,2,1,1,1],
+                [1,2,2,2,1,2,1,2,2,2,1,2,2,2,1,2,1,2,1],
+                [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1,2,1,2,1],
+                [1,3,2,2,2,2,2,2,1,2,1,2,1,2,2,2,2,3,1],
+                [1,2,1,1,1,1,1,2,1,2,2,2,1,2,1,1,1,2,1],
+                [1,2,2,2,2,2,2,2,2,2,1,2,2,2,2,2,2,2,1],
+                [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Nivel 4 - Laberinto con más obstáculos
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,2,1,2,2,2,1,2,1,2,1,2,2,2,1,2,2,1],
+                [1,3,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,1],
+                [1,2,2,2,2,1,2,2,2,2,2,2,2,2,1,2,2,2,1],
+                [1,1,1,2,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1],
+                [1,2,2,2,1,2,2,2,1,2,2,2,1,2,2,2,1,2,1],
+                [1,2,1,2,2,2,1,2,1,2,1,2,1,2,1,2,2,2,1],
+                [1,2,1,1,1,2,1,2,2,2,2,2,2,2,1,2,1,1,1],
+                [0,0,2,2,1,2,1,1,1,0,0,0,1,1,1,2,1,0,0],
+                [1,1,1,2,1,2,1,0,0,0,0,0,0,0,1,2,1,1,1],
+                [0,0,2,2,2,2,1,0,1,1,1,1,1,0,1,2,2,0,0],
+                [1,1,1,1,1,2,1,0,1,0,0,0,1,0,1,2,1,1,1],
+                [1,2,2,2,2,2,2,2,1,0,0,0,1,2,2,2,2,2,1],
+                [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1],
+                [1,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,1],
+                [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1,2,1,2,1],
+                [1,3,2,2,2,2,1,2,1,2,1,2,1,2,1,2,2,3,1],
+                [1,2,1,1,1,2,1,2,2,2,2,2,2,2,1,2,1,2,1],
+                [1,2,2,2,2,2,2,2,1,1,1,1,1,2,2,2,2,2,1],
+                [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ],
+            // Nivel 5+ - Laberinto muy complejo (se repite después del nivel 5)
+            [
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+                [1,2,1,2,2,2,1,2,1,2,1,2,1,2,2,2,1,2,1],
+                [1,3,1,2,1,2,2,2,1,2,1,2,1,2,2,2,1,3,1],
+                [1,2,2,2,1,2,1,2,2,2,2,2,2,2,1,2,1,2,1],
+                [1,1,1,2,2,2,1,2,1,1,1,1,1,2,1,2,2,2,1],
+                [1,2,2,2,1,1,1,2,1,2,2,2,1,2,1,1,1,2,1],
+                [1,2,1,2,1,2,2,2,1,2,1,2,1,2,2,2,1,2,1],
+                [1,2,1,2,1,2,1,2,2,2,2,2,2,2,1,2,1,2,1],
+                [0,0,2,2,1,2,1,1,1,0,0,0,1,1,1,2,1,0,0],
+                [1,1,1,2,1,2,1,0,0,0,0,0,0,0,1,2,1,1,1],
+                [0,0,2,2,2,2,1,0,1,1,1,1,1,0,1,2,2,0,0],
+                [1,1,1,1,1,2,1,0,1,0,0,0,1,0,1,2,1,1,1],
+                [1,2,2,2,2,2,2,2,1,0,0,0,1,2,2,2,2,2,1],
+                [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1],
+                [1,2,2,2,1,2,2,2,2,2,1,2,2,2,2,2,1,2,1],
+                [1,1,1,2,1,2,1,1,1,2,1,2,1,1,1,2,1,2,1],
+                [1,3,2,2,2,2,1,2,1,2,1,2,1,2,1,2,2,3,1],
+                [1,2,1,1,1,2,1,2,2,2,2,2,2,2,1,2,1,2,1],
+                [1,2,2,2,2,2,2,2,1,1,1,1,1,2,2,2,2,2,1],
+                [1,2,1,1,1,1,1,2,1,1,1,1,1,2,1,1,1,2,1],
+                [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+            ]
+        ];
+        
+        let currentMazeLayout = [];
+        let player = { x: 9, y: 15, direction: 'right', nextDirection: null };
+        let ghosts = [];
+        let dots = [];
+        let powerPellets = [];
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameRunning = false;
+        let gameLoop = null;
+        let ghostLoop = null;
+        let scaredMode = false;
+        let scaredTimer = null;
+        
+        function getHighScore() {
+            return parseInt(localStorage.getItem('snackattackHighScore') || '0');
+        }
+        
+        function setHighScore(score) {
+            localStorage.setItem('snackattackHighScore', score);
+        }
+        
+        function startGame() {
+            try {
+                console.log('startGame llamado');
+                
+                // Limpiar loops anteriores si existen
+                if (gameLoop) {
+                    clearInterval(gameLoop);
+                    gameLoop = null;
+                }
+                if (ghostLoop) {
+                    clearInterval(ghostLoop);
+                    ghostLoop = null;
+                }
+                if (scaredTimer) {
+                    clearTimeout(scaredTimer);
+                    scaredTimer = null;
+                }
+                
+                // Si es el primer inicio, resetear nivel
+                if (level === 0 || level === undefined) {
+                    level = 1;
+                }
+                if (score === undefined) {
+                    score = 0;
+                }
+                
+                gameRunning = true;
+                lives = 3;
+                scaredMode = false;
+                
+                const scoreEl = document.getElementById('score');
+                const livesEl = document.getElementById('lives');
+                const levelEl = document.getElementById('levelDisplay');
+                const gameOverEl = document.getElementById('gameOver');
+                const startBtnEl = document.getElementById('startBtn');
+                const highScoreEl = document.getElementById('highScore');
+                
+                if (scoreEl) scoreEl.textContent = score;
+                if (livesEl) livesEl.textContent = lives;
+                if (levelEl) levelEl.textContent = level;
+                if (gameOverEl) gameOverEl.classList.remove('show');
+                if (startBtnEl) startBtnEl.style.display = 'none';
+                if (highScoreEl) highScoreEl.textContent = getHighScore();
+                
+                console.log('Inicializando juego...');
+                initGame();
+                console.log('Renderizando...');
+                render();
+                
+                // Iniciar loops
+                gameLoop = setInterval(update, 150);
+                ghostLoop = setInterval(moveGhosts, 200);
+                
+                // Controles de teclado
+                document.addEventListener('keydown', handleKeyPress);
+                
+                console.log('Juego iniciado correctamente');
+            } catch (error) {
+                console.error('Error al iniciar el juego:', error);
+                console.error('Stack trace:', error.stack);
+                alert('Error al iniciar el juego: ' + error.message);
+            }
+        }
+        
+        // Asegurar que startGame esté disponible globalmente
+        window.startGame = startGame;
+        
+        function getMazeLayout() {
+            // Seleccionar laberinto basado en el nivel (cicla después del nivel 5)
+            const mazeIndex = Math.min(level - 1, mazeLayouts.length - 1);
+            return mazeLayouts[mazeIndex];
+        }
+        
+        function initGame() {
+            try {
+                // Obtener el laberinto para el nivel actual
+                currentMazeLayout = getMazeLayout();
+                
+                if (!currentMazeLayout || !Array.isArray(currentMazeLayout)) {
+                    throw new Error('Laberinto no válido');
+                }
+                
+                // Encontrar posición inicial válida para el jugador (buscar desde abajo)
+                let playerStartX = 9, playerStartY = 15;
+                let foundPlayer = false;
+                for (let y = MAZE_HEIGHT - 1; y >= 0 && !foundPlayer; y--) {
+                    for (let x = 0; x < MAZE_WIDTH; x++) {
+                        if (currentMazeLayout[y] && currentMazeLayout[y][x] !== 1 && currentMazeLayout[y][x] !== 0) {
+                            playerStartX = x;
+                            playerStartY = y;
+                            foundPlayer = true;
+                            break;
+                        }
+                    }
+                }
+                
+                player = { x: playerStartX, y: playerStartY, direction: 'right', nextDirection: null };
+                
+                // Encontrar posición central válida para los fantasmas
+                let ghostStartX = 9, ghostStartY = 9;
+                let foundGhost = false;
+                for (let y = 0; y < MAZE_HEIGHT && !foundGhost; y++) {
+                    for (let x = 0; x < MAZE_WIDTH; x++) {
+                        if (currentMazeLayout[y] && currentMazeLayout[y][x] !== 1 && currentMazeLayout[y][x] !== 0) {
+                            ghostStartX = x;
+                            ghostStartY = y;
+                            foundGhost = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Inicializar fantasmas en posiciones válidas
+                ghosts = [
+                    { x: ghostStartX, y: ghostStartY, direction: 'left', color: 'red' },
+                    { x: Math.max(0, ghostStartX - 1), y: ghostStartY, direction: 'right', color: 'blue' },
+                    { x: Math.min(MAZE_WIDTH - 1, ghostStartX + 1), y: ghostStartY, direction: 'left', color: 'pink' },
+                    { x: ghostStartX, y: Math.max(0, ghostStartY - 1), direction: 'down', color: 'orange' }
+                ];
+                
+                // Asegurar que los fantasmas estén en posiciones válidas
+                ghosts.forEach(ghost => {
+                    if (ghost.x < 0 || ghost.x >= MAZE_WIDTH || ghost.y < 0 || ghost.y >= MAZE_HEIGHT ||
+                        !currentMazeLayout[ghost.y] || currentMazeLayout[ghost.y][ghost.x] === 1) {
+                        ghost.x = ghostStartX;
+                        ghost.y = ghostStartY;
+                    }
+                });
+                
+                // Inicializar puntos
+                dots = [];
+                powerPellets = [];
+                
+                for (let y = 0; y < MAZE_HEIGHT; y++) {
+                    if (!currentMazeLayout[y]) continue;
+                    for (let x = 0; x < MAZE_WIDTH; x++) {
+                        if (currentMazeLayout[y][x] === 2) {
+                            dots.push({ x, y });
+                        } else if (currentMazeLayout[y][x] === 3) {
+                            powerPellets.push({ x, y });
+                        }
+                    }
+                }
+                
+                console.log(`Juego inicializado: ${dots.length} puntos, ${powerPellets.length} power pellets`);
+            } catch (error) {
+                console.error('Error en initGame:', error);
+                throw error;
+            }
+        }
+        
+        function render() {
+            const maze = document.getElementById('maze');
+            if (!maze) return;
+            
+            maze.innerHTML = '';
+            
+            const cellSize = Math.min(
+                maze.offsetWidth / MAZE_WIDTH,
+                maze.offsetHeight / MAZE_HEIGHT
+            );
+            
+            if (cellSize <= 0) return; // Asegurar que cellSize sea válido
+            
+            // Renderizar paredes usando el laberinto actual
+            for (let y = 0; y < MAZE_HEIGHT; y++) {
+                for (let x = 0; x < MAZE_WIDTH; x++) {
+                    if (currentMazeLayout[y][x] === 1) {
+                        const wall = document.createElement('div');
+                        wall.className = 'wall';
+                        wall.style.left = (x * cellSize) + 'px';
+                        wall.style.top = (y * cellSize) + 'px';
+                        wall.style.width = cellSize + 'px';
+                        wall.style.height = cellSize + 'px';
+                        maze.appendChild(wall);
+                    }
+                }
+            }
+            
+            // Renderizar puntos
+            dots.forEach(dot => {
+                const dotEl = document.createElement('div');
+                dotEl.className = 'dot';
+                dotEl.style.left = (dot.x * cellSize + cellSize/2 - 3) + 'px';
+                dotEl.style.top = (dot.y * cellSize + cellSize/2 - 3) + 'px';
+                maze.appendChild(dotEl);
+            });
+            
+            // Renderizar power pellets
+            powerPellets.forEach(pellet => {
+                const pelletEl = document.createElement('div');
+                pelletEl.className = 'power-pellet';
+                pelletEl.style.left = (pellet.x * cellSize + cellSize/2 - 6) + 'px';
+                pelletEl.style.top = (pellet.y * cellSize + cellSize/2 - 6) + 'px';
+                maze.appendChild(pelletEl);
+            });
+            
+            // Renderizar fantasmas ANTES del jugador para que el jugador esté encima
+            if (ghosts && ghosts.length > 0) {
+                ghosts.forEach((ghost, index) => {
+                    // Asegurar que el fantasma tenga un color válido
+                    if (!ghost.color) {
+                        const colors = ['red', 'blue', 'pink', 'orange'];
+                        ghost.color = colors[index % colors.length];
+                    }
+                    
+                    // Verificar que la posición sea válida
+                    if (ghost.x >= 0 && ghost.x < MAZE_WIDTH && ghost.y >= 0 && ghost.y < MAZE_HEIGHT) {
+                        const ghostEl = document.createElement('div');
+                        ghostEl.className = `ghost ${ghost.color} ${scaredMode ? 'scared' : ''}`;
+                        ghostEl.style.left = (ghost.x * cellSize + cellSize/2 - 9) + 'px';
+                        ghostEl.style.top = (ghost.y * cellSize + cellSize/2 - 9) + 'px';
+                        ghostEl.style.zIndex = '50';
+                        ghostEl.style.position = 'absolute';
+                        maze.appendChild(ghostEl);
+                    }
+                });
+            }
+            
+            // Renderizar jugador (al final para que esté encima de los fantasmas)
+            if (player && player.x >= 0 && player.x < MAZE_WIDTH && player.y >= 0 && player.y < MAZE_HEIGHT) {
+                const playerEl = document.createElement('div');
+                playerEl.className = 'player';
+                playerEl.style.left = (player.x * cellSize + cellSize/2 - 10) + 'px';
+                playerEl.style.top = (player.y * cellSize + cellSize/2 - 10) + 'px';
+                playerEl.style.zIndex = '100';
+                maze.appendChild(playerEl);
+            }
+        }
+        
+        function movePlayer(direction) {
+            if (!gameRunning) return;
+            if (player) {
+                player.nextDirection = direction;
+            }
+        }
+        
+        function handleKeyPress(e) {
+            if (!gameRunning) return;
+            const keyMap = {
+                'ArrowUp': 'up',
+                'ArrowDown': 'down',
+                'ArrowLeft': 'left',
+                'ArrowRight': 'right',
+                'w': 'up',
+                's': 'down',
+                'a': 'left',
+                'd': 'right'
+            };
+            if (keyMap[e.key]) {
+                movePlayer(keyMap[e.key]);
+            }
+        }
+        
+        function update() {
+            if (!gameRunning) return;
+            
+            // Intentar mover en la dirección deseada
+            if (player.nextDirection && canMove(player.x, player.y, player.nextDirection)) {
+                player.direction = player.nextDirection;
+            }
+            
+            // Mover jugador
+            if (canMove(player.x, player.y, player.direction)) {
+                const newPos = getNewPosition(player.x, player.y, player.direction);
+                player.x = newPos.x;
+                player.y = newPos.y;
+                
+                // Verificar recolección de puntos
+                const dotIndex = dots.findIndex(d => d.x === player.x && d.y === player.y);
+                if (dotIndex !== -1) {
+                    dots.splice(dotIndex, 1);
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    
+                    if (dots.length === 0 && powerPellets.length === 0) {
+                        endGame(true);
+                        return;
+                    }
+                }
+                
+                // Verificar recolección de power pellet
+                const pelletIndex = powerPellets.findIndex(p => p.x === player.x && p.y === player.y);
+                if (pelletIndex !== -1) {
+                    powerPellets.splice(pelletIndex, 1);
+                    score += 50;
+                    document.getElementById('score').textContent = score;
+                    activateScaredMode();
+                }
+            }
+            
+            // Verificar colisión con fantasmas
+            ghosts.forEach(ghost => {
+                if (ghost.x === player.x && ghost.y === player.y) {
+                    if (scaredMode) {
+                        // Comer fantasma
+                        score += 200;
+                        document.getElementById('score').textContent = score;
+                        // Respawn fantasma
+                        ghost.x = 9;
+                        ghost.y = 9;
+                    } else {
+                        // Perder vida
+                        loseLife();
+                    }
+                }
+            });
+            
+            render();
+        }
+        
+        function moveGhosts() {
+            if (!gameRunning) return;
+            
+            ghosts.forEach(ghost => {
+                const possibleDirections = ['up', 'down', 'left', 'right'].filter(dir => 
+                    canMove(ghost.x, ghost.y, dir) && dir !== getOppositeDirection(ghost.direction)
+                );
+                
+                if (possibleDirections.length > 0) {
+                    if (scaredMode) {
+                        // Movimiento aleatorio cuando está asustado
+                        ghost.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                    } else {
+                        // Movimiento hacia el jugador
+                        const directions = possibleDirections.map(dir => {
+                            const newPos = getNewPosition(ghost.x, ghost.y, dir);
+                            const distance = Math.abs(newPos.x - player.x) + Math.abs(newPos.y - player.y);
+                            return { dir, distance };
+                        });
+                        directions.sort((a, b) => a.distance - b.distance);
+                        ghost.direction = directions[0].dir;
+                    }
+                    
+                    const newPos = getNewPosition(ghost.x, ghost.y, ghost.direction);
+                    ghost.x = newPos.x;
+                    ghost.y = newPos.y;
+                }
+            });
+        }
+        
+        function canMove(x, y, direction) {
+            const newPos = getNewPosition(x, y, direction);
+            if (newPos.x < 0 || newPos.x >= MAZE_WIDTH || newPos.y < 0 || newPos.y >= MAZE_HEIGHT) {
+                return false;
+            }
+            return currentMazeLayout[newPos.y][newPos.x] !== 1;
+        }
+        
+        function getNewPosition(x, y, direction) {
+            const pos = { x, y };
+            switch(direction) {
+                case 'up': pos.y--; break;
+                case 'down': pos.y++; break;
+                case 'left': pos.x--; break;
+                case 'right': pos.x++; break;
+            }
+            
+            // Wrapping (túneles)
+            if (pos.x < 0) pos.x = MAZE_WIDTH - 1;
+            if (pos.x >= MAZE_WIDTH) pos.x = 0;
+            
+            return pos;
+        }
+        
+        function getOppositeDirection(dir) {
+            const opposites = {
+                'up': 'down',
+                'down': 'up',
+                'left': 'right',
+                'right': 'left'
+            };
+            return opposites[dir];
+        }
+        
+        function activateScaredMode() {
+            scaredMode = true;
+            if (scaredTimer) clearTimeout(scaredTimer);
+            scaredTimer = setTimeout(() => {
+                scaredMode = false;
+            }, 10000); // 10 segundos
+        }
+        
+        function loseLife() {
+            lives--;
+            document.getElementById('lives').textContent = lives;
+            
+            if (lives <= 0) {
+                endGame(false);
+            } else {
+                // Respawn
+                player.x = 9;
+                player.y = 15;
+                player.direction = 'right';
+                player.nextDirection = null;
+                
+                ghosts.forEach(ghost => {
+                    ghost.x = 9;
+                    ghost.y = 9;
+                });
+            }
+        }
+        
+        function endGame(won) {
+            gameRunning = false;
+            if (gameLoop) clearInterval(gameLoop);
+            if (ghostLoop) clearInterval(ghostLoop);
+            if (scaredTimer) clearTimeout(scaredTimer);
+            
+            document.removeEventListener('keydown', handleKeyPress);
+            
+            const highScore = getHighScore();
+            if (score > highScore) {
+                setHighScore(score);
+                document.getElementById('highScore').textContent = score;
+            }
+            
+            if (won) {
+                // Victoria - aumentar nivel y mostrar mensaje
+                const currentLevel = level;
+                level++;
+                document.getElementById('gameOverTitle').textContent = `¡Ganaste Nivel ${currentLevel}! 🎉`;
+                document.getElementById('restartBtn').textContent = 'Siguiente Nivel';
+                setTimeout(() => {
+                    document.getElementById('finalScore').textContent = score;
+                    document.getElementById('gameOver').classList.add('show');
+                }, 500);
+            } else {
+                // Derrota
+                document.getElementById('gameOverTitle').textContent = '¡Game Over!';
+                document.getElementById('restartBtn').textContent = 'Reintentar';
+                level = 1;
+                setTimeout(() => {
+                    document.getElementById('finalScore').textContent = score;
+                    document.getElementById('gameOver').classList.add('show');
+                }, 500);
+            }
+        }
+        
+        function restartGame() {
+            document.getElementById('gameOver').classList.remove('show');
+            // Mantener el nivel actual si se ganó, resetear si se perdió
+            startGame();
+        }
+        
+        // Asegurar que las funciones estén disponibles globalmente
+        window.restartGame = restartGame;
+        window.movePlayer = movePlayer;
+        window.startGame = startGame;
+        
+        // Agregar listener de eventos cuando el DOM esté listo
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initEventListeners);
+        } else {
+            initEventListeners();
+        }
+        
+        function initEventListeners() {
+            const startBtn = document.getElementById('startBtn');
+            if (startBtn) {
+                // Remover listeners anteriores si existen
+                startBtn.onclick = null;
+                startBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Botón Jugar clickeado');
+                    startGame();
+                    return false;
+                }, true);
+                startBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Botón Jugar tocado');
+                    startGame();
+                    return false;
+                }, true);
+                console.log('Listeners agregados al botón Jugar');
+            } else {
+                console.error('Botón startBtn no encontrado');
+            }
+            
+            const restartBtn = document.getElementById('restartBtn');
+            if (restartBtn) {
+                restartBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    restartGame();
+                    return false;
+                });
+            }
+            
+            console.log('Event listeners configurados');
+        }
+    </script>
+</body>
+</html>

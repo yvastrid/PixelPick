@@ -144,50 +144,69 @@ def init_db():
             
             funny_games_data = [
                 {
-                    'name': 'Flootilupis',
-                    'description': '¡Recolecta aritos de colores mientras esquivas obstáculos! Un juego adictivo inspirado en tu cereal favorito. ¿Podrás conseguir el puntaje más alto?',
-                    'price': 0.00,
-                    'platforms': 'Android',
-                    'category': 'Arcade',
-                    'game_url': 'flootilupis.html'
-                },
-                {
-                    'name': 'Chocopops',
-                    'description': 'Un juego dulce donde debes hacer estallar burbujas de chocolate antes de que se acabe el tiempo. ¡Cuidado con los niveles difíciles!',
-                    'price': 0.00,
-                    'platforms': 'Android',
-                    'category': 'Puzzle',
-                    'game_url': 'chocopops.html'
-                },
-                {
-                    'name': 'SnackAttack',
-                    'description': 'Defiende tu despensa de los snacks hambrientos que quieren devorarlo todo. ¡Usa tu estrategia para mantenerlos a raya!',
-                    'price': 0.00,
-                    'platforms': 'Android',
-                    'category': 'Tower Defense',
-                    'game_url': 'snackattack.html'
-                },
-                {
-                    'name': 'CerealKiller',
-                    'description': 'Un juego de acción rápida donde debes eliminar todos los cereales antes de que invadan tu tazón. ¡Apunta y dispara!',
-                    'price': 0.00,
-                    'platforms': 'Android',
-                    'category': 'Shooter',
-                    'game_url': 'cerealkiller.html'
-                },
-                {
-                    'name': 'Munchies',
-                    'description': 'Un juego relajante donde debes hacer coincidir snacks del mismo tipo. ¡Combina tres o más para ganar puntos y desbloquear niveles!',
+                    'name': 'Frootilupis Match',
+                    'description': '🍩 ¡Combina 3 o más cereales del mismo color! Un juego adictivo tipo Candy Crush donde los cereales vuelan y explotan. ¿Tendrás lo necesario para alcanzar el puntaje más alto?',
                     'price': 0.00,
                     'platforms': 'Android',
                     'category': 'Match-3',
+                    'game_url': 'flootilupis.html'
+                },
+                {
+                    'name': 'Chocopops Volador',
+                    'description': '🍫 ¡Vuela como un chocolate loco! Toca la pantalla para hacer volar tu chocolate y esquiva los obstáculos verdes. ¿Podrás llegar más lejos que tus amigos?',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Arcade',
+                    'game_url': 'chocopops.html'
+                },
+                {
+                    'name': 'SnackAttack Laberinto',
+                    'description': '🍿 ¡Come todos los snacks antes de que los fantasmas te atrapen! Recolecta puntos dorados y usa los power pellets para convertirte en el rey del laberinto.',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Arcade',
+                    'game_url': 'snackattack.html'
+                },
+                {
+                    'name': 'CerealKiller Connect',
+                    'description': '🥣 ¡Conecta los cereales del mismo color sin que se crucen! Dibuja líneas táctiles para unir los puntos. Cada nivel es más difícil que el anterior. ¿Podrás con el desafío?',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Puzzle',
+                    'game_url': 'cerealkiller.html'
+                },
+                {
+                    'name': 'Munchies Memory',
+                    'description': '🧠 ¡Encuentra todos los pares de snacks antes de que se acabe el tiempo! Entrena tu memoria con este juego relajante lleno de deliciosos snacks. ¿Tienes buena memoria?',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Memory',
                     'game_url': 'munchies.html'
                 }
             ]
             
             games_added = 0
+            games_updated = 0
             for game_data in funny_games_data:
-                if game_data['name'] not in existing_funny_games:
+                existing_game = Game.query.filter_by(name=game_data['name']).first()
+                
+                # Buscar por nombre antiguo si existe (para migración)
+                if not existing_game:
+                    old_names = {
+                        'Frootilupis Match': 'Flootilupis',
+                        'Chocopops Volador': 'Chocopops',
+                        'SnackAttack Laberinto': 'SnackAttack',
+                        'CerealKiller Connect': 'CerealKiller',
+                        'Munchies Memory': 'Munchies'
+                    }
+                    old_name = old_names.get(game_data['name'])
+                    if old_name:
+                        existing_game = Game.query.filter_by(name=old_name).first()
+                        if existing_game:
+                            existing_game.name = game_data['name']  # Actualizar nombre
+                
+                if not existing_game:
+                    # Crear nuevo juego
                     game = Game(
                         name=game_data['name'],
                         description=game_data['description'],
@@ -200,21 +219,40 @@ def init_db():
                     games_added += 1
                     logger.info(f"Agregando juego: {game_data['name']}")
                 else:
-                    # Actualizar game_url si el juego existe pero no tiene URL
-                    existing_game = Game.query.filter_by(name=game_data['name']).first()
-                    if existing_game and (not existing_game.game_url or existing_game.game_url.startswith('http')):
+                    # Actualizar juego existente (nombre, descripción, URL, etc.)
+                    needs_update = False
+                    if existing_game.name != game_data['name']:
+                        existing_game.name = game_data['name']
+                        needs_update = True
+                    if existing_game.description != game_data['description']:
+                        existing_game.description = game_data['description']
+                        needs_update = True
+                    if existing_game.game_url != game_data['game_url']:
                         existing_game.game_url = game_data['game_url']
+                        needs_update = True
+                    if existing_game.platforms != game_data['platforms']:
                         existing_game.platforms = game_data['platforms']
+                        needs_update = True
+                    if existing_game.price != game_data['price']:
                         existing_game.price = game_data['price']
+                        needs_update = True
+                    if existing_game.category != game_data['category']:
+                        existing_game.category = game_data['category']
+                        needs_update = True
+                    
+                    if needs_update:
+                        games_updated += 1
                         logger.info(f"Actualizando juego: {game_data['name']}")
             
-            if games_added > 0:
+            if games_added > 0 or games_updated > 0:
                 db.session.commit()
-                logger.info(f"Se agregaron {games_added} juegos chistosos exitosamente")
+                if games_added > 0:
+                    logger.info(f"Se agregaron {games_added} juegos chistosos exitosamente")
+                if games_updated > 0:
+                    logger.info(f"Se actualizaron {games_updated} juegos chistosos exitosamente")
             else:
-                # Hacer commit de las actualizaciones si las hay
                 db.session.commit()
-                logger.info("Juegos chistosos ya existen, verificando actualizaciones")
+                logger.info("Juegos chistosos ya existen y están actualizados")
     except Exception as e:
         logger.error(f"Error al inicializar base de datos: {str(e)}")
         logger.error(traceback.format_exc())
