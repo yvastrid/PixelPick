@@ -254,7 +254,9 @@ class BenefitsActivity : AppCompatActivity() {
                         if (isBasicPlan && subscription.status == "active") {
                             applyBasicPlanSelectedState()
                         } else if (isPremiumPlan && subscription.status == "active") {
-                            applyPremiumPlanSelectedState()
+                            // Verificar si hay periodo pagado activo para mostrar la nota
+                            val hasPaidPeriod = subscription.currentPeriodEnd != null
+                            applyPremiumPlanSelectedState(hasPaidPeriod)
                         } else {
                             // Por defecto, básico
                             applyBasicPlanSelectedState()
