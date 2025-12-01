@@ -145,28 +145,42 @@ class MainActivity : AppCompatActivity() {
     
     private fun checkSubscriptionStatus() {
         lifecycleScope.launch {
-            android.util.Log.d("MainActivity", "Verificando estado de suscripción...")
+            android.util.Log.d("MainActivity", "=== VERIFICANDO ESTADO DE SUSCRIPCIÓN ===")
             val result = subscriptionRepository.getSubscriptionStatus()
             result.onSuccess { statusResponse ->
                 android.util.Log.d("MainActivity", "Estado de suscripción recibido: hasSubscription=${statusResponse.hasSubscription}")
                 if (statusResponse.hasSubscription && statusResponse.subscription != null) {
-                    val planType = statusResponse.subscription.planType ?: ""
-                    android.util.Log.d("MainActivity", "Plan type: $planType")
+                    val subscription = statusResponse.subscription
+                    val planType = subscription.planType ?: ""
+                    val status = subscription.status ?: ""
+                    android.util.Log.d("MainActivity", "Plan type: '$planType'")
+                    android.util.Log.d("MainActivity", "Status: '$status'")
+                    
                     // Verificar si es plan premium
-                    isPremiumPlan = planType.contains("pixelie_plan", ignoreCase = true) && 
-                                   !planType.contains("basic", ignoreCase = true)
-                    android.util.Log.d("MainActivity", "isPremiumPlan: $isPremiumPlan")
+                    // El plan premium tiene plan_type='pixelie_plan' (sin guión bajo después de pixelie)
+                    isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) ||
+                                   (planType.contains("pixelie", ignoreCase = true) && 
+                                    !planType.contains("basic", ignoreCase = true) &&
+                                    planType.contains("plan", ignoreCase = true))
+                    
+                    android.util.Log.d("MainActivity", "isPremiumPlan determinado: $isPremiumPlan")
+                    android.util.Log.d("MainActivity", "Comparación detallada:")
+                    android.util.Log.d("MainActivity", "  - planType.equals('pixelie_plan'): ${planType.equals("pixelie_plan", ignoreCase = true)}")
+                    android.util.Log.d("MainActivity", "  - contiene 'pixelie' y no 'basic': ${planType.contains("pixelie", ignoreCase = true) && !planType.contains("basic", ignoreCase = true)}")
                 } else {
                     // Si no tiene suscripción, es plan básico por defecto
-                    android.util.Log.d("MainActivity", "No tiene suscripción, usando plan básico")
+                    android.util.Log.d("MainActivity", "No tiene suscripción o subscription es null, usando plan básico")
                     isPremiumPlan = false
                 }
+                
+                android.util.Log.d("MainActivity", "=== FIN VERIFICACIÓN. isPremiumPlan final: $isPremiumPlan ===")
                 
                 // Aplicar restricciones según el plan
                 applyPlanRestrictions()
             }.onFailure { error ->
                 // En caso de error, asumir plan básico
                 android.util.Log.e("MainActivity", "Error al verificar suscripción: ${error.message}")
+                error.printStackTrace()
                 isPremiumPlan = false
                 applyPlanRestrictions()
             }
@@ -174,21 +188,27 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun applyPlanRestrictions() {
-        android.util.Log.d("MainActivity", "Aplicando restricciones de plan. isPremiumPlan: $isPremiumPlan")
+        android.util.Log.d("MainActivity", "=== APLICANDO RESTRICCIONES DE PLAN ===")
+        android.util.Log.d("MainActivity", "isPremiumPlan: $isPremiumPlan")
+        
         // Ocultar/mostrar sección de Recomendaciones IA según el plan
         if (isPremiumPlan) {
-            android.util.Log.d("MainActivity", "Plan premium: Mostrando recomendaciones IA")
+            android.util.Log.d("MainActivity", "✅ Plan premium: Mostrando recomendaciones IA")
             binding.aiRecommendationsSection.visibility = View.VISIBLE
             binding.exploreButton.visibility = View.VISIBLE  // Mostrar botón de explorar recomendaciones
             loadRecommendations()
         } else {
-            android.util.Log.d("MainActivity", "Plan básico: Ocultando recomendaciones IA")
+            android.util.Log.d("MainActivity", "❌ Plan básico: Ocultando recomendaciones IA")
             binding.aiRecommendationsSection.visibility = View.GONE
             binding.exploreButton.visibility = View.GONE  // Ocultar botón de explorar recomendaciones
         }
         
         // Recargar catálogo con restricciones aplicadas
+        // Esto actualizará el adapter con el estado correcto de isPremiumPlan
+        android.util.Log.d("MainActivity", "Recargando catálogo con isPremiumPlan: $isPremiumPlan")
         loadCatalog()
+        
+        android.util.Log.d("MainActivity", "=== FIN APLICACIÓN DE RESTRICCIONES ===")
     }
     
     private fun showProfileMenu(anchor: View) {
@@ -366,21 +386,24 @@ class MainActivity : AppCompatActivity() {
                     android.util.Log.d("MainActivity", "✅ Mostrando ${catalogGames.size} juegos en el catálogo")
                     binding.catalogRecyclerView.visibility = View.VISIBLE
                     binding.catalogEmptyStateLayout.visibility = View.GONE
+                    android.util.Log.d("MainActivity", "Creando CatalogAdapter con isPremiumPlan: $isPremiumPlan")
                     val adapter = CatalogAdapter(catalogGames, isPremiumPlan) { game ->
-                        if (!isPremiumPlan) {
-                            // Si es plan básico y el juego está bloqueado, mostrar mensaje
-                            val gameIndex = catalogGames.indexOfFirst { it.id == game.id }
-                            if (gameIndex > 0) {  // Solo el primer juego (índice 0) está desbloqueado
-                                Toast.makeText(this@MainActivity, "Actualiza a Premium para desbloquear este juego", Toast.LENGTH_LONG).show()
-                                // Opcional: abrir pantalla de suscripción
-                                val intent = Intent(this@MainActivity, BenefitsActivity::class.java)
-                                intent.putExtra("mode", "upgrade")
-                                startActivity(intent)
-                            } else {
-                                Toast.makeText(this@MainActivity, "Este juego no está disponible aún", Toast.LENGTH_SHORT).show()
-                            }
+                        val gameIndex = catalogGames.indexOfFirst { it.id == game.id }
+                        android.util.Log.d("MainActivity", "Click en juego: ${game.name}, índice: $gameIndex, isPremiumPlan: $isPremiumPlan")
+                        
+                        if (!isPremiumPlan && gameIndex > 0) {
+                            // Plan básico: solo el primer juego (índice 0) está desbloqueado
+                            Toast.makeText(this@MainActivity, "Actualiza a Premium para desbloquear este juego", Toast.LENGTH_LONG).show()
+                            val intent = Intent(this@MainActivity, BenefitsActivity::class.java)
+                            intent.putExtra("mode", "upgrade")
+                            startActivity(intent)
                         } else {
-                            Toast.makeText(this@MainActivity, "Este juego no está disponible aún", Toast.LENGTH_SHORT).show()
+                            // Plan premium o primer juego: abrir el juego
+                            val intent = Intent(this@MainActivity, GameActivity::class.java)
+                            intent.putExtra("game_url", game.gameUrl)
+                            intent.putExtra("game_id", game.id)
+                            intent.putExtra("game_name", game.name)
+                            startActivity(intent)
                         }
                     }
                     // Carrusel horizontal

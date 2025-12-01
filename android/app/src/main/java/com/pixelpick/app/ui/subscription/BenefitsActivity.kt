@@ -93,25 +93,46 @@ class BenefitsActivity : AppCompatActivity() {
     
     private fun activatePremiumPlan() {
         lifecycleScope.launch {
-            android.util.Log.d("BenefitsActivity", "Activando plan premium...")
+            android.util.Log.d("BenefitsActivity", "=== ACTIVANDO PLAN PREMIUM ===")
             val result = subscriptionRepository.activatePremiumPlan()
             result.onSuccess {
-                android.util.Log.d("BenefitsActivity", "Plan premium activado exitosamente")
+                android.util.Log.d("BenefitsActivity", "✅ Plan premium activado exitosamente en backend")
                 Toast.makeText(
                     this@BenefitsActivity,
                     "¡Plan premium activado exitosamente!",
                     Toast.LENGTH_LONG
                 ).show()
-                // Esperar un momento para que el mensaje se muestre
-                kotlinx.coroutines.delay(500)
-                // Volver a MainActivity para ver los cambios
-                // Usar FLAG_ACTIVITY_CLEAR_TOP para asegurar que MainActivity se recree
-                val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+                
+                // Esperar un momento para que el mensaje se muestre y el backend procese
+                kotlinx.coroutines.delay(1000)
+                
+                // Verificar que el cambio se haya guardado antes de volver
+                android.util.Log.d("BenefitsActivity", "Verificando estado actualizado...")
+                val verifyResult = subscriptionRepository.getSubscriptionStatus()
+                verifyResult.onSuccess { statusResponse ->
+                    android.util.Log.d("BenefitsActivity", "Estado verificado: hasSubscription=${statusResponse.hasSubscription}")
+                    if (statusResponse.hasSubscription && statusResponse.subscription != null) {
+                        val planType = statusResponse.subscription.planType ?: ""
+                        android.util.Log.d("BenefitsActivity", "Plan type verificado: '$planType'")
+                    }
+                    
+                    // Volver a MainActivity para ver los cambios
+                    // Usar FLAG_ACTIVITY_CLEAR_TASK para asegurar que MainActivity se recree completamente
+                    val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }.onFailure { error ->
+                    android.util.Log.e("BenefitsActivity", "Error al verificar estado: ${error.message}")
+                    // Aún así, volver a MainActivity
+                    val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
             }.onFailure { error ->
-                android.util.Log.e("BenefitsActivity", "Error al activar plan premium: ${error.message}")
+                android.util.Log.e("BenefitsActivity", "❌ Error al activar plan premium: ${error.message}")
+                error.printStackTrace()
                 Toast.makeText(
                     this@BenefitsActivity,
                     "Error al activar plan premium: ${error.message}",
@@ -123,13 +144,26 @@ class BenefitsActivity : AppCompatActivity() {
     
     private fun loadSubscriptionStatus() {
         lifecycleScope.launch {
+            android.util.Log.d("BenefitsActivity", "=== CARGANDO ESTADO DE SUSCRIPCIÓN ===")
             val result = subscriptionRepository.getSubscriptionStatus()
             result.onSuccess { statusResponse ->
+                android.util.Log.d("BenefitsActivity", "Estado recibido: hasSubscription=${statusResponse.hasSubscription}")
                 if (statusResponse.hasSubscription && statusResponse.subscription != null) {
                     val subscription = statusResponse.subscription
                     val planType = subscription.planType ?: ""
-                    val isBasicPlan = planType.contains("basic", ignoreCase = true) || planType.contains("pixelie_basic", ignoreCase = true)
-                    val isPremiumPlan = planType.contains("pixelie_plan", ignoreCase = true)
+                    val status = subscription.status ?: ""
+                    android.util.Log.d("BenefitsActivity", "Plan type: '$planType'")
+                    android.util.Log.d("BenefitsActivity", "Status: '$status'")
+                    
+                    // Verificar tipo de plan
+                    val isBasicPlan = planType.contains("basic", ignoreCase = true) || 
+                                     planType.contains("pixelie_basic", ignoreCase = true)
+                    val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) ||
+                                       (planType.contains("pixelie", ignoreCase = true) && 
+                                        !planType.contains("basic", ignoreCase = true) &&
+                                        planType.contains("plan", ignoreCase = true))
+                    
+                    android.util.Log.d("BenefitsActivity", "isBasicPlan: $isBasicPlan, isPremiumPlan: $isPremiumPlan")
                     
                     // Determinar el nombre del plan
                     val planName = when {
