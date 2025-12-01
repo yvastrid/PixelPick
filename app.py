@@ -1530,6 +1530,7 @@ def activate_premium_plan():
             existing_subscription.current_period_start = datetime.utcnow()
             # El plan premium no expira por ahora (para testing)
             existing_subscription.current_period_end = None
+            existing_subscription.cancel_at_period_end = False  # Cancelar cualquier cancelación programada
         else:
             # Crear nueva suscripción premium
             premium_subscription = Subscription(
