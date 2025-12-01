@@ -999,6 +999,109 @@ def checkout():
                          plan_price=plan_price,
                          plan_currency=plan_currency.upper())
 
+@app.route('/api/subscription/status', methods=['GET'])
+@login_required
+def get_subscription_status():
+    """Obtener el estado de la suscripción del usuario actual"""
+    try:
+        # Verificar si el usuario tiene una suscripción activa
+        active_subscription = Subscription.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        
+        has_subscription = active_subscription is not None
+        
+        subscription_data = None
+        if active_subscription:
+            subscription_data = {
+                'id': active_subscription.id,
+                'user_id': active_subscription.user_id,
+                'plan_type': active_subscription.plan_type,
+                'amount': float(active_subscription.amount) if active_subscription.amount else 0.0,
+                'currency': active_subscription.currency,
+                'status': active_subscription.status,
+                'current_period_start': active_subscription.current_period_start.isoformat() if active_subscription.current_period_start else None,
+                'current_period_end': active_subscription.current_period_end.isoformat() if active_subscription.current_period_end else None
+            }
+        
+        return jsonify({
+            'success': True,
+            'user': {
+                'has_subscription': has_subscription,
+                'subscription': subscription_data
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error al obtener estado de suscripción: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': 'Error al obtener estado de suscripción'
+        }), 500
+
+@app.route('/api/subscription/activate-basic', methods=['POST'])
+@login_required
+def activate_basic_plan():
+    """Activar el plan básico Pixelie Basic Plan (gratis)"""
+    try:
+        # Verificar si el usuario ya tiene una suscripción activa
+        existing_subscription = Subscription.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        
+        if existing_subscription:
+            # Si ya tiene una suscripción activa, retornar éxito sin crear otra
+            return jsonify({
+                'success': True,
+                'message': 'Ya tienes un plan activo',
+                'user': {
+                    'subscription': {
+                        'plan_type': existing_subscription.plan_type,
+                        'status': existing_subscription.status
+                    }
+                }
+            }), 200
+        
+        # Crear suscripción básica
+        basic_subscription = Subscription(
+            user_id=current_user.id,
+            plan_type='pixelie_basic_plan',
+            amount=0.00,
+            currency='MXN',
+            status='active',
+            subscription_id=None,  # No hay ID de Stripe para el plan básico
+            current_period_start=datetime.utcnow(),
+            current_period_end=None  # El plan básico no expira
+        )
+        
+        db.session.add(basic_subscription)
+        db.session.commit()
+        
+        logger.info(f"Plan básico activado para usuario {current_user.id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Plan básico activado exitosamente',
+            'user': {
+                'subscription': {
+                    'plan_type': 'pixelie_basic_plan',
+                    'status': 'active'
+                }
+            }
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error al activar plan básico: {str(e)}")
+        logger.error(traceback.format_exc())
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'Error al activar plan básico'
+        }), 500
+
 @app.route('/api/create-payment-intent', methods=['POST'])
 @login_required
 def create_payment_intent():
@@ -1043,8 +1146,11 @@ def create_payment_intent():
             logger.info(f"Payment Intent creado para usuario {current_user.id}: {intent.id}")
             
             return jsonify({
-                'client_secret': intent.client_secret,
-                'payment_intent_id': intent.id
+                'success': True,
+                'user': {
+                    'client_secret': intent.client_secret,
+                    'payment_intent_id': intent.id
+                }
             }), 200
             
         except stripe.error.StripeError as e:

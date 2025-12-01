@@ -23,75 +23,113 @@
             </p>
         </section>
 
-        <!-- Laptop Mockup with Plan -->
+        <!-- Plans Section -->
         <section class="plan-section" id="plan">
-            <div class="laptop-container">
-                <div class="laptop-frame">
-                    <div class="laptop-screen">
-                        <div class="plan-content">
-                            <div class="plan-left">
-                                <div class="plan-price">
-                                    <span class="currency">$</span>
-                                    <span class="amount">100</span>
-                                    <span class="period">MXN</span>
-                                </div>
-                                <div class="price-subtitle">Pago único</div>
-                                <h2 class="plan-name">Pixelie Plan</h2>
-                                <p class="plan-description">
-                                    Level up completo con un solo clic en tu cartera.
-                                </p>
-                                <div class="button-group">
-                                    <a href="{{ url_for('login') }}" class="purchase-button" id="purchaseButton">
-                                        <span class="button-text">Comprar Plan</span>
-                                        <span class="button-arrow">→</span>
-                                    </a>
-                                    <a href="{{ url_for('index') }}" class="cancel-button">
-                                        Cancelar
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="plan-right">
-                                <h3 class="included-title">Qué Incluye</h3>
-                                <ul class="included-list">
-                                    <li>
-                                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        Recomendaciones Ilimitadas
-                                    </li>
-                                    <li>
-                                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        Acceso a tu Panel de Miembro
-                                    </li>
-                                    <li>
-                                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        Juegos Listos para Jugar
-                                    </li>
-                                    <li>
-                                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        Revisiones Rápidas
-                                    </li>
-                                    <li>
-                                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        Soporte de IA Siempre Activo
-                                    </li>
-                                    <li>
-                                        <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                            <polyline points="20 6 9 17 4 12"/>
-                                        </svg>
-                                        Recomendaciones Consistentes y Personalizadas
-                                    </li>
-                                </ul>
-                            </div>
+            <div class="plans-container">
+                <!-- Pixelie Basic Plan -->
+                <div class="plan-card basic-plan">
+                    <div class="plan-header">
+                        <div class="plan-price">
+                            <span class="currency">$</span>
+                            <span class="amount">0</span>
+                            <span class="period">MXN</span>
                         </div>
+                        <div class="price-subtitle">Gratis</div>
+                        <h2 class="plan-name">Pixelie Basic Plan</h2>
+                        <p class="plan-description">
+                            Plan básico para empezar tu aventura gaming.
+                        </p>
+                    </div>
+                    <div class="plan-body">
+                        <h3 class="included-title">Qué Incluye</h3>
+                        <ul class="included-list">
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Recomendaciones Básicas
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Acceso Limitado al Panel
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Catálogo de Juegos
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="plan-footer">
+                        <a href="{{ url_for('login') }}" class="select-plan-button basic-button" id="selectBasicButton">
+                            <span class="button-text">Seleccionar Plan</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Pixelie Plan (Premium) -->
+                <div class="plan-card premium-plan">
+                    <div class="plan-header">
+                        <div class="plan-price">
+                            <span class="currency">$</span>
+                            <span class="amount">100</span>
+                            <span class="period">MXN</span>
+                        </div>
+                        <div class="price-subtitle">Pago único</div>
+                        <h2 class="plan-name">Pixelie Plan</h2>
+                        <p class="plan-description">
+                            Level up completo con un solo clic en tu cartera.
+                        </p>
+                    </div>
+                    <div class="plan-body">
+                        <h3 class="included-title">Qué Incluye</h3>
+                        <ul class="included-list">
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Recomendaciones Ilimitadas
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Acceso a tu Panel de Miembro
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Juegos Listos para Jugar
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Revisiones Rápidas
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Soporte de IA Siempre Activo
+                            </li>
+                            <li>
+                                <svg class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Recomendaciones Consistentes y Personalizadas
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="plan-footer">
+                        <a href="{{ url_for('login') }}" class="select-plan-button premium-button" id="purchaseButton">
+                            <span class="button-text">Comprar Plan</span>
+                            <span class="button-arrow">→</span>
+                        </a>
                     </div>
                 </div>
             </div>
