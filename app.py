@@ -1430,19 +1430,49 @@ def activate_basic_plan():
         ).first()
         
         if existing_subscription:
-            # Si ya tiene una suscripción activa, retornar éxito sin crear otra
-            return jsonify({
-                'success': True,
-                'message': 'Ya tienes un plan activo',
-                'user': {
-                    'subscription': {
-                        'plan_type': existing_subscription.plan_type,
-                        'status': existing_subscription.status
+            # Si tiene un plan premium con periodo pagado activo
+            if existing_subscription.plan_type == 'pixelie_plan' and existing_subscription.current_period_end:
+                # Marcar para cancelar al final del periodo (respetar tiempo pagado)
+                existing_subscription.cancel_at_period_end = True
+                existing_subscription.plan_type = 'pixelie_basic'  # Cambiar plan type pero mantener periodo
+                db.session.commit()
+                
+                logger.info(f"Plan básico programado para activarse al finalizar periodo para usuario {current_user.id}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'El cambio al plan básico se aplicará al finalizar tu periodo actual. Se respetará el tiempo que ya pagaste.',
+                    'user': {
+                        'subscription': {
+                            'plan_type': 'pixelie_basic',
+                            'status': 'active',
+                            'cancel_at_period_end': True,
+                            'current_period_end': existing_subscription.current_period_end.isoformat() if existing_subscription.current_period_end else None
+                        }
                     }
-                }
-            }), 200
+                }), 200
+            else:
+                # Si ya tiene plan básico o no tiene periodo pagado, cambiar inmediatamente
+                existing_subscription.plan_type = 'pixelie_basic'
+                existing_subscription.amount = 0.00
+                existing_subscription.cancel_at_period_end = False
+                existing_subscription.current_period_end = None
+                db.session.commit()
+                
+                logger.info(f"Plan básico activado inmediatamente para usuario {current_user.id}")
+                
+                return jsonify({
+                    'success': True,
+                    'message': 'Plan básico activado exitosamente',
+                    'user': {
+                        'subscription': {
+                            'plan_type': 'pixelie_basic',
+                            'status': 'active'
+                        }
+                    }
+                }), 200
         
-        # Crear suscripción básica
+        # Crear suscripción básica nueva
         basic_subscription = Subscription(
             user_id=current_user.id,
             plan_type='pixelie_basic',
@@ -1451,7 +1481,8 @@ def activate_basic_plan():
             status='active',
             subscription_id=None,  # No hay ID de Stripe para el plan básico
             current_period_start=datetime.utcnow(),
-            current_period_end=None  # El plan básico no expira
+            current_period_end=None,  # El plan básico no expira
+            cancel_at_period_end=False
         )
         
         db.session.add(basic_subscription)
@@ -1464,7 +1495,7 @@ def activate_basic_plan():
             'message': 'Plan básico activado exitosamente',
             'user': {
                 'subscription': {
-                    'plan_type': 'pixelie_basic_plan',
+                    'plan_type': 'pixelie_basic',
                     'status': 'active'
                 }
             }

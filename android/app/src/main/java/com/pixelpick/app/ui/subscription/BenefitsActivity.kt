@@ -275,14 +275,18 @@ class BenefitsActivity : AppCompatActivity() {
         // Modo view cuando tiene plan premium: mostrar ambos planes, premium marcado
         binding.basicPlanCard.visibility = View.VISIBLE
         binding.basicPlanCard.alpha = 1f
-        binding.selectBasicButton.text = "Seleccionar Plan"
+        binding.selectBasicButton.text = "Cambiar a Plan Básico"
         binding.selectBasicButton.isEnabled = true
         binding.selectBasicButton.isClickable = true
         binding.premiumPlanCard.visibility = View.VISIBLE
         binding.premiumPlanCard.alpha = 0.6f
-        binding.purchaseButton.text = "Seleccionado"
+        binding.purchaseButton.text = "Plan Actual"
         binding.purchaseButton.isEnabled = false
         binding.purchaseButton.isClickable = false
+        
+        // Mostrar nota sobre cambio de plan cuando hay periodo pagado activo
+        binding.planChangeNote.visibility = View.VISIBLE
+        binding.planChangeNote.text = "Nota: Si tienes un periodo pagado activo, el cambio al plan básico se aplicará al finalizar tu periodo actual. Se respetará el tiempo que ya pagaste."
     }
     
     private fun applyBasicPlanSelectedState() {
