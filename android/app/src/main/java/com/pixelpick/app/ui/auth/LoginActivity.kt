@@ -132,5 +132,34 @@ class LoginActivity : AppCompatActivity() {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
         binding.loginButton.isEnabled = !show
     }
+    
+    private fun checkPlanAndRedirect() {
+        val subscriptionRepository = SubscriptionRepository(RetrofitClient.apiService)
+        lifecycleScope.launch {
+            val result = subscriptionRepository.getSubscriptionStatus()
+            result.onSuccess { statusResponse ->
+                val planType = statusResponse.subscription?.planType ?: ""
+                val isPremium = planType.equals("pixelie_plan", ignoreCase = true) ||
+                               (planType.contains("pixelie", ignoreCase = true) && 
+                                !planType.contains("basic", ignoreCase = true) &&
+                                planType.contains("plan", ignoreCase = true))
+                
+                val intent = if (isPremium && statusResponse.hasSubscription) {
+                    Intent(this@LoginActivity, MainActivityPremium::class.java)
+                } else {
+                    Intent(this@LoginActivity, MainActivity::class.java)
+                }
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }.onFailure {
+                // En caso de error, ir a MainActivity básico por defecto
+                val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }
+        }
+    }
 }
 
