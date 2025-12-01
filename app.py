@@ -591,13 +591,24 @@ def get_profile():
     try:
         user = current_user
         
-        # Obtener juegos del usuario
+        # Obtener juegos del usuario (ordenados por última vez jugado)
         user_games = UserGame.query.filter_by(user_id=user.id).order_by(UserGame.last_played.desc()).limit(10).all()
         games_data = [ug.to_dict() for ug in user_games]
         
-        # Estadísticas
-        completed_count = UserGame.query.filter_by(user_id=user.id, status='completed').count()
-        playing_count = UserGame.query.filter_by(user_id=user.id, status='playing').count()
+        # Estadísticas - contar solo juegos únicos por status
+        # Completados: juegos únicos con status 'completed'
+        completed_games = db.session.query(UserGame.game_id).filter_by(
+            user_id=user.id, 
+            status='completed'
+        ).distinct().all()
+        completed_count = len(completed_games)
+        
+        # Jugando: juegos únicos con status 'playing'
+        playing_games = db.session.query(UserGame.game_id).filter_by(
+            user_id=user.id, 
+            status='playing'
+        ).distinct().all()
+        playing_count = len(playing_games)
         
         return jsonify({
             'success': True,
@@ -918,12 +929,16 @@ def add_user_game():
         
         # Verificar si ya existe
         existing = UserGame.query.filter_by(user_id=current_user.id, game_id=game_id).first()
+        is_new_game = False
+        
         if existing:
-            # Actualizar estado y fecha
+            # Actualizar estado y fecha (no es un juego nuevo, solo se actualiza)
+            # Si el juego estaba completado y ahora se vuelve a jugar, cambiar a 'playing'
             existing.status = status
             existing.last_played = datetime.utcnow()
         else:
-            # Crear nueva relación
+            # Crear nueva relación (es un juego nuevo)
+            is_new_game = True
             user_game = UserGame(
                 user_id=current_user.id,
                 game_id=game_id,
@@ -935,7 +950,8 @@ def add_user_game():
         
         return jsonify({
             'success': True,
-            'message': 'Juego agregado exitosamente'
+            'message': 'Juego agregado exitosamente',
+            'is_new': is_new_game  # Indicar si es un juego nuevo
         }), 200
         
     except Exception as e:
