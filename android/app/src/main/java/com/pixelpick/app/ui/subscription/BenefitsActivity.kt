@@ -306,7 +306,7 @@ class BenefitsActivity : AppCompatActivity() {
         binding.premiumPlanCard.visibility = View.GONE
     }
     
-    private fun applyPremiumPlanSelectedState() {
+    private fun applyPremiumPlanSelectedState(hasPaidPeriod: Boolean = false) {
         // Modo view cuando tiene plan premium: mostrar ambos planes, premium marcado
         binding.basicPlanCard.visibility = View.VISIBLE
         binding.basicPlanCard.alpha = 1f
@@ -319,9 +319,13 @@ class BenefitsActivity : AppCompatActivity() {
         binding.purchaseButton.isEnabled = false
         binding.purchaseButton.isClickable = false
         
-        // Mostrar nota sobre cambio de plan cuando hay periodo pagado activo
-        binding.planChangeNote.visibility = View.VISIBLE
-        binding.planChangeNote.text = "Nota: Si tienes un periodo pagado activo, el cambio al plan básico se aplicará al finalizar tu periodo actual. Se respetará el tiempo que ya pagaste."
+        // Mostrar nota sobre cambio de plan solo cuando hay periodo pagado activo
+        if (hasPaidPeriod) {
+            binding.planChangeNote.visibility = View.VISIBLE
+            binding.planChangeNote.text = "Nota: Si tienes un periodo pagado activo, el cambio al plan básico se aplicará al finalizar tu periodo actual. Se respetará el tiempo que ya pagaste."
+        } else {
+            binding.planChangeNote.visibility = View.GONE
+        }
     }
     
     private fun applyBasicPlanSelectedState() {
