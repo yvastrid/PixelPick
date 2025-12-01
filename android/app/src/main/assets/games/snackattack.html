@@ -860,6 +860,16 @@
                 // Victoria - aumentar nivel y mostrar mensaje
                 const currentLevel = level;
                 level++;
+                
+                // Si se completa el nivel 5 o más, marcar el juego como completado
+                if (currentLevel >= 5 && typeof Android !== 'undefined' && Android.gameCompleted) {
+                    try {
+                        Android.gameCompleted();
+                    } catch (e) {
+                        console.log('No se pudo notificar completación del juego');
+                    }
+                }
+                
                 document.getElementById('gameOverTitle').textContent = `¡Ganaste Nivel ${currentLevel}! 🎉`;
                 document.getElementById('restartBtn').textContent = 'Siguiente Nivel';
                 setTimeout(() => {

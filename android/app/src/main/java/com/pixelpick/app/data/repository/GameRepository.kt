@@ -92,5 +92,23 @@ class GameRepository {
             Result.failure(e)
         }
     }
+    
+    suspend fun completeGame(gameId: Int): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.completeGame(gameId)
+            if (response.isSuccessful && response.body() != null) {
+                val body = response.body()!!
+                if (body.success) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(body.error ?: "Error desconocido"))
+                }
+            } else {
+                Result.failure(Exception("Error en la respuesta del servidor"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
 

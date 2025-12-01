@@ -255,6 +255,15 @@
                 document.getElementById('highScore').textContent = finalScore;
             }
             
+            // Si se completa el juego (todos los pares encontrados), marcar como completado
+            if (matchedPairs === 8 && typeof Android !== 'undefined' && Android.gameCompleted) {
+                try {
+                    Android.gameCompleted();
+                } catch (e) {
+                    console.log('No se pudo notificar completación del juego');
+                }
+            }
+            
             document.getElementById('finalScore').textContent = finalScore;
             document.getElementById('gameOver').classList.add('show');
             document.getElementById('startBtn').style.display = 'block';

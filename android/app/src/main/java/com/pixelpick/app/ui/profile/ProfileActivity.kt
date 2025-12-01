@@ -7,12 +7,16 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.pixelpick.app.R
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.pixelpick.app.data.repository.AuthRepository
 import com.pixelpick.app.data.repository.ProfileRepository
 import com.pixelpick.app.databinding.ActivityProfileBinding
 import com.pixelpick.app.ui.auth.LoginActivity
 import com.pixelpick.app.util.SessionManager
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.TimeZone
 
 class ProfileActivity : AppCompatActivity() {
     
@@ -51,7 +55,7 @@ class ProfileActivity : AppCompatActivity() {
         // Mostrar datos de la sesión primero mientras se cargan los datos actualizados
         val sessionUser = sessionManager.getUser()
         sessionUser?.let { user ->
-            displayUserData(user, null)
+            displayUserData(user, null, null)
         }
         
         showLoading(true)
@@ -65,11 +69,11 @@ class ProfileActivity : AppCompatActivity() {
                 response.user?.let { user ->
                     // Guardar usuario actualizado en sesión
                     sessionManager.saveUser(user)
-                    displayUserData(user, response.stats)
+                    displayUserData(user, response.stats, response.games)
                 } ?: run {
                     // Si no hay usuario en la respuesta, usar datos de sesión
                     sessionUser?.let { user ->
-                        displayUserData(user, response.stats)
+                        displayUserData(user, response.stats, response.games)
                     }
                 }
             }.onFailure { error ->
@@ -87,7 +91,7 @@ class ProfileActivity : AppCompatActivity() {
                 
                 // Si falla la carga, mantener los datos de sesión si existen
                 sessionUser?.let { user ->
-                    displayUserData(user, null)
+                    displayUserData(user, null, null)
                     // Mostrar mensaje más corto si hay datos guardados
                     val shortMessage = when {
                         errorMessage.contains("Tiempo de espera") -> "El servidor está tardando en responder. Los datos mostrados pueden estar desactualizados."
@@ -108,7 +112,11 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
     
-    private fun displayUserData(user: com.pixelpick.app.data.models.User, stats: com.pixelpick.app.data.models.Stats?) {
+    private fun displayUserData(
+        user: com.pixelpick.app.data.models.User,
+        stats: com.pixelpick.app.data.models.Stats?,
+        recentGames: List<com.pixelpick.app.data.models.UserGame>?
+    ) {
         // Formatear nombre completo - manejar strings vacíos o null
         val firstName = (user.firstName ?: "").trim()
         val lastName = (user.lastName ?: "").trim()
@@ -122,6 +130,37 @@ class ProfileActivity : AppCompatActivity() {
         binding.nameText.text = fullName
         binding.emailText.text = (user.email ?: "").ifEmpty { "email@ejemplo.com" }
         
+        // Formatear y mostrar fecha de registro
+        user.createdAt?.let { createdAtStr ->
+            try {
+                val date = parseDate(createdAtStr)
+                if (date != null) {
+                    val monthNames = arrayOf(
+                        "enero", "febrero", "marzo", "abril", "mayo", "junio",
+                        "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+                    )
+                    
+                    val calendar = Calendar.getInstance()
+                    calendar.time = date
+                    val month = monthNames[calendar.get(Calendar.MONTH)]
+                    val year = calendar.get(Calendar.YEAR)
+                    
+                    binding.joinedDateText.text = "Se unió en $month de $year"
+                    binding.joinedDateLayout.visibility = View.VISIBLE
+                } else {
+                    binding.joinedDateText.text = "Se unió recientemente"
+                    binding.joinedDateLayout.visibility = View.VISIBLE
+                }
+            } catch (e: Exception) {
+                // Si hay error al parsear, mostrar mensaje por defecto
+                binding.joinedDateText.text = "Se unió recientemente"
+                binding.joinedDateLayout.visibility = View.VISIBLE
+            }
+        } ?: run {
+            binding.joinedDateText.text = "Se unió recientemente"
+            binding.joinedDateLayout.visibility = View.VISIBLE
+        }
+        
         // Mostrar estadísticas
         stats?.let {
             binding.completedGamesText.text = it.completed.toString()
@@ -130,6 +169,36 @@ class ProfileActivity : AppCompatActivity() {
             // Valores por defecto si no hay estadísticas
             binding.completedGamesText.text = "0"
             binding.playingGamesText.text = "0"
+        }
+        
+        // Actualizar mensaje del empty state con el nombre del usuario
+        binding.emptyStateDescription.text = "$fullName no ha jugado juegos recientemente."
+        
+        // Mostrar juegos recientes o estado vacío
+        recentGames?.let { games ->
+            val playingGames = games.filter { it.status == "playing" || it.status == "completed" }
+            if (playingGames.isNotEmpty()) {
+                // Mostrar RecyclerView con juegos
+                binding.recentGamesRecyclerView.visibility = View.VISIBLE
+                binding.recentGamesEmptyState.visibility = View.GONE
+                
+                val adapter = RecentGamesAdapter(playingGames.take(5)) // Mostrar máximo 5 juegos
+                binding.recentGamesRecyclerView.layoutManager = LinearLayoutManager(this)
+                binding.recentGamesRecyclerView.adapter = adapter
+                
+                // Actualizar badge del empty state con el número de juegos
+                binding.emptyStateBadge.text = playingGames.size.toString()
+            } else {
+                // Mostrar estado vacío
+                binding.recentGamesRecyclerView.visibility = View.GONE
+                binding.recentGamesEmptyState.visibility = View.VISIBLE
+                binding.emptyStateBadge.text = "0"
+            }
+        } ?: run {
+            // Si no hay juegos, mostrar estado vacío
+            binding.recentGamesRecyclerView.visibility = View.GONE
+            binding.recentGamesEmptyState.visibility = View.VISIBLE
+            binding.emptyStateBadge.text = "0"
         }
     }
     
@@ -176,6 +245,27 @@ class ProfileActivity : AppCompatActivity() {
     
     private fun showLoading(show: Boolean) {
         binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+    }
+    
+    private fun parseDate(dateStr: String): Date? {
+        val formats = arrayOf(
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+            "yyyy-MM-dd"
+        )
+        
+        for (format in formats) {
+            try {
+                val sdf = SimpleDateFormat(format, Locale.getDefault())
+                sdf.timeZone = TimeZone.getTimeZone("UTC")
+                return sdf.parse(dateStr)
+            } catch (e: Exception) {
+                // Intentar siguiente formato
+            }
+        }
+        return null
     }
     
     override fun onSupportNavigateUp(): Boolean {

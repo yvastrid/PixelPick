@@ -42,6 +42,9 @@ interface ApiService {
     @POST("/api/user/games")
     suspend fun addUserGame(@Body request: AddGameRequest): Response<ApiResponse<Unit>>
     
+    @POST("/api/user/games/{game_id}/complete")
+    suspend fun completeGame(@Path("game_id") gameId: Int): Response<ApiResponse<Unit>>
+    
     // Verificación de email
     @POST("/api/verify-email")
     suspend fun verifyEmail(@Body request: Map<String, String>): Response<ApiResponse<Unit>>

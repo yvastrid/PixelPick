@@ -145,7 +145,7 @@ def init_db():
             funny_games_data = [
                 {
                     'name': 'Frootilupis Match',
-                    'description': '🍩 ¡Combina 3 o más cereales del mismo color! Un juego adictivo tipo Candy Crush donde los cereales vuelan y explotan. ¿Tendrás lo necesario para alcanzar el puntaje más alto?',
+                    'description': '🍩 ¡Combina 3 o más cereales del mismo color! Un juego adictivo donde los cereales vuelan y explotan con efectos increíbles. ¿Tendrás lo necesario para alcanzar el puntaje más alto?',
                     'price': 0.00,
                     'platforms': 'Android',
                     'category': 'Match-3',
@@ -787,7 +787,7 @@ def get_user_games():
 @app.route('/api/user/games', methods=['POST'])
 @login_required
 def add_user_game():
-    """Agregar juego al usuario"""
+    """Agregar o actualizar juego del usuario"""
     try:
         data = request.get_json()
         
@@ -827,6 +827,42 @@ def add_user_game():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Error al agregar juego: {str(e)}'}), 500
+
+@app.route('/api/user/games/<int:game_id>/complete', methods=['POST'])
+@login_required
+def complete_game(game_id):
+    """Marcar juego como completado"""
+    try:
+        # Verificar que el juego existe
+        game = Game.query.get(game_id)
+        if not game:
+            return jsonify({'error': 'Juego no encontrado'}), 404
+        
+        # Buscar o crear relación usuario-juego
+        user_game = UserGame.query.filter_by(user_id=current_user.id, game_id=game_id).first()
+        if user_game:
+            # Actualizar a completado
+            user_game.status = 'completed'
+            user_game.last_played = datetime.utcnow()
+        else:
+            # Crear nueva relación como completado
+            user_game = UserGame(
+                user_id=current_user.id,
+                game_id=game_id,
+                status='completed'
+            )
+            db.session.add(user_game)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Juego marcado como completado'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Error al completar juego: {str(e)}'}), 500
 
 # ==================== RUTAS DE VERIFICACIÓN DE EMAIL ====================
 

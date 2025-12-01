@@ -335,7 +335,7 @@ class MainActivity : AppCompatActivity() {
             com.pixelpick.app.data.models.Game(
                 id = 1,
                 name = "Frootilupis Match",
-                description = "🍩 ¡Combina 3 o más cereales del mismo color! Un juego adictivo tipo Candy Crush donde los cereales vuelan y explotan. ¿Tendrás lo necesario para alcanzar el puntaje más alto?",
+                description = "🍩 ¡Combina 3 o más cereales del mismo color! Un juego adictivo donde los cereales vuelan y explotan con efectos increíbles. ¿Tendrás lo necesario para alcanzar el puntaje más alto?",
                 price = 0.0,
                 platforms = listOf("Android"),
                 imageUrl = null,

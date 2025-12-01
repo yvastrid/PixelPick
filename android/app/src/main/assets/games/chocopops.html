@@ -426,6 +426,15 @@
                 document.getElementById('highScore').textContent = score;
             }
             
+            // Si se alcanza un puntaje alto (500+), marcar como completado
+            if (score >= 500 && typeof Android !== 'undefined' && Android.gameCompleted) {
+                try {
+                    Android.gameCompleted();
+                } catch (e) {
+                    console.log('No se pudo notificar completación del juego');
+                }
+            }
+            
             document.getElementById('finalScore').textContent = score;
             document.getElementById('gameOver').classList.add('show');
             document.getElementById('startBtn').style.display = 'block';

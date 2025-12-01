@@ -80,6 +80,8 @@ class CatalogAdapter(
                     // Abrir el juego en GameActivity
                     val intent = Intent(binding.root.context, GameActivity::class.java)
                     intent.putExtra("game_file", gameFile)
+                    intent.putExtra("game_id", game.id)
+                    intent.putExtra("game_name", game.name)
                     binding.root.context.startActivity(intent)
                 } else {
                     // Si no hay archivo, llamar al callback
