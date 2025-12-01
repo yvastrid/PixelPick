@@ -32,6 +32,7 @@ import com.pixelpick.app.util.onFailure
 import com.pixelpick.app.util.onSuccess
 import com.pixelpick.app.util.SessionManager
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class MainActivity : AppCompatActivity() {
     
@@ -67,7 +68,11 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         // Recargar estado de suscripción y aplicar restricciones
         // Esto asegura que si el usuario cambió de plan, se actualicen las restricciones
-        checkSubscriptionStatus()
+        // Agregar un pequeño delay para asegurar que el backend haya procesado el cambio
+        lifecycleScope.launch {
+            kotlinx.coroutines.delay(300)  // Esperar 300ms para que el backend procese
+            checkSubscriptionStatus()
+        }
     }
     
     private fun animateViews() {
@@ -140,15 +145,20 @@ class MainActivity : AppCompatActivity() {
     
     private fun checkSubscriptionStatus() {
         lifecycleScope.launch {
+            android.util.Log.d("MainActivity", "Verificando estado de suscripción...")
             val result = subscriptionRepository.getSubscriptionStatus()
             result.onSuccess { statusResponse ->
+                android.util.Log.d("MainActivity", "Estado de suscripción recibido: hasSubscription=${statusResponse.hasSubscription}")
                 if (statusResponse.hasSubscription && statusResponse.subscription != null) {
                     val planType = statusResponse.subscription.planType ?: ""
+                    android.util.Log.d("MainActivity", "Plan type: $planType")
                     // Verificar si es plan premium
                     isPremiumPlan = planType.contains("pixelie_plan", ignoreCase = true) && 
                                    !planType.contains("basic", ignoreCase = true)
+                    android.util.Log.d("MainActivity", "isPremiumPlan: $isPremiumPlan")
                 } else {
                     // Si no tiene suscripción, es plan básico por defecto
+                    android.util.Log.d("MainActivity", "No tiene suscripción, usando plan básico")
                     isPremiumPlan = false
                 }
                 
@@ -164,12 +174,15 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun applyPlanRestrictions() {
+        android.util.Log.d("MainActivity", "Aplicando restricciones de plan. isPremiumPlan: $isPremiumPlan")
         // Ocultar/mostrar sección de Recomendaciones IA según el plan
         if (isPremiumPlan) {
+            android.util.Log.d("MainActivity", "Plan premium: Mostrando recomendaciones IA")
             binding.aiRecommendationsSection.visibility = View.VISIBLE
             binding.exploreButton.visibility = View.VISIBLE  // Mostrar botón de explorar recomendaciones
             loadRecommendations()
         } else {
+            android.util.Log.d("MainActivity", "Plan básico: Ocultando recomendaciones IA")
             binding.aiRecommendationsSection.visibility = View.GONE
             binding.exploreButton.visibility = View.GONE  // Ocultar botón de explorar recomendaciones
         }

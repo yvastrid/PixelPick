@@ -93,19 +93,25 @@ class BenefitsActivity : AppCompatActivity() {
     
     private fun activatePremiumPlan() {
         lifecycleScope.launch {
+            android.util.Log.d("BenefitsActivity", "Activando plan premium...")
             val result = subscriptionRepository.activatePremiumPlan()
             result.onSuccess {
+                android.util.Log.d("BenefitsActivity", "Plan premium activado exitosamente")
                 Toast.makeText(
                     this@BenefitsActivity,
                     "¡Plan premium activado exitosamente!",
                     Toast.LENGTH_LONG
                 ).show()
+                // Esperar un momento para que el mensaje se muestre
+                kotlinx.coroutines.delay(500)
                 // Volver a MainActivity para ver los cambios
+                // Usar FLAG_ACTIVITY_CLEAR_TOP para asegurar que MainActivity se recree
                 val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
             }.onFailure { error ->
+                android.util.Log.e("BenefitsActivity", "Error al activar plan premium: ${error.message}")
                 Toast.makeText(
                     this@BenefitsActivity,
                     "Error al activar plan premium: ${error.message}",
