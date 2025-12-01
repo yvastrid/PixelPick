@@ -13,21 +13,40 @@ class SubscriptionRepository(
     suspend fun getSubscriptionStatus(): Result<SubscriptionStatusResponse> {
         return withContext(Dispatchers.IO) {
             try {
+                android.util.Log.d("SubscriptionRepository", "=== SOLICITANDO ESTADO DE SUSCRIPCIÓN ===")
                 val response = apiService.getSubscriptionStatus()
+                android.util.Log.d("SubscriptionRepository", "Response code: ${response.code()}")
+                android.util.Log.d("SubscriptionRepository", "Response isSuccessful: ${response.isSuccessful}")
+                
                 if (response.isSuccessful && response.body() != null) {
                     val apiResponse = response.body()!!
+                    android.util.Log.d("SubscriptionRepository", "API Response success: ${apiResponse.success}")
+                    android.util.Log.d("SubscriptionRepository", "API Response user: ${apiResponse.user}")
+                    
                     if (apiResponse.success) {
                         // El API devuelve un Map con has_subscription y subscription
                         @Suppress("UNCHECKED_CAST")
                         val userData = apiResponse.user as? Map<*, *>
+                        android.util.Log.d("SubscriptionRepository", "userData type: ${userData?.javaClass?.simpleName}")
+                        android.util.Log.d("SubscriptionRepository", "userData keys: ${userData?.keys}")
+                        
                         if (userData != null) {
                             val hasSubscription = userData["has_subscription"] as? Boolean ?: false
                             val subscriptionMap = userData["subscription"] as? Map<*, *>
+                            
+                            android.util.Log.d("SubscriptionRepository", "has_subscription: $hasSubscription")
+                            android.util.Log.d("SubscriptionRepository", "subscriptionMap: $subscriptionMap")
+                            
+                            val planType = subscriptionMap?.get("plan_type") as? String
+                            android.util.Log.d("SubscriptionRepository", "🔍 plan_type RAW: '$planType'")
+                            android.util.Log.d("SubscriptionRepository", "🔍 plan_type length: ${planType?.length}")
+                            android.util.Log.d("SubscriptionRepository", "🔍 plan_type bytes: ${planType?.toByteArray()?.contentToString()}")
+                            
                             val subscription = if (subscriptionMap != null) {
                                 Subscription(
                                     id = (subscriptionMap["id"] as? Number)?.toInt(),
                                     userId = (subscriptionMap["user_id"] as? Number)?.toInt(),
-                                    planType = subscriptionMap["plan_type"] as? String,
+                                    planType = planType,
                                     amount = (subscriptionMap["amount"] as? Number)?.toDouble(),
                                     currency = subscriptionMap["currency"] as? String,
                                     status = subscriptionMap["status"] as? String,
@@ -36,20 +55,28 @@ class SubscriptionRepository(
                                 )
                             } else null
                             
+                            android.util.Log.d("SubscriptionRepository", "✅ Subscription creada: planType='${subscription?.planType}'")
+                            
                             Result.success(SubscriptionStatusResponse(
                                 hasSubscription = hasSubscription,
                                 subscription = subscription
                             ))
                         } else {
-                            Result.failure(Exception("Formato de respuesta inválido"))
+                            android.util.Log.e("SubscriptionRepository", "❌ userData es null")
+                            Result.failure(Exception("Formato de respuesta inválido: userData es null"))
                         }
                     } else {
+                        android.util.Log.e("SubscriptionRepository", "❌ API Response success es false")
                         Result.failure(Exception(apiResponse.message ?: apiResponse.error ?: "Error desconocido"))
                     }
                 } else {
+                    android.util.Log.e("SubscriptionRepository", "❌ Response no exitoso o body es null")
+                    android.util.Log.e("SubscriptionRepository", "Response error body: ${response.errorBody()?.string()}")
                     Result.failure(Exception("Error al obtener estado de suscripción"))
                 }
             } catch (e: Exception) {
+                android.util.Log.e("SubscriptionRepository", "❌ Excepción: ${e.message}")
+                e.printStackTrace()
                 Result.failure(e)
             }
         }

@@ -137,22 +137,35 @@ class LoginActivity : AppCompatActivity() {
         val subscriptionRepository = SubscriptionRepository(RetrofitClient.apiService)
         lifecycleScope.launch {
             android.util.Log.d("LoginActivity", "=== VERIFICANDO PLAN DESPUÉS DE LOGIN ===")
+            
+            // Esperar un momento para asegurar que la sesión esté establecida
+            kotlinx.coroutines.delay(500)
+            
             val result = subscriptionRepository.getSubscriptionStatus()
             result.onSuccess { statusResponse ->
+                android.util.Log.d("LoginActivity", "✅ Respuesta recibida exitosamente")
+                android.util.Log.d("LoginActivity", "hasSubscription: ${statusResponse.hasSubscription}")
+                android.util.Log.d("LoginActivity", "subscription: ${statusResponse.subscription}")
+                
                 val planType = statusResponse.subscription?.planType ?: ""
                 android.util.Log.d("LoginActivity", "🔍 Plan type recibido: '$planType'")
-                android.util.Log.d("LoginActivity", "🔍 hasSubscription: ${statusResponse.hasSubscription}")
+                android.util.Log.d("LoginActivity", "🔍 Plan type length: ${planType.length}")
+                android.util.Log.d("LoginActivity", "🔍 Plan type equals 'pixelie_plan': ${planType.equals("pixelie_plan", ignoreCase = true)}")
+                android.util.Log.d("LoginActivity", "🔍 Plan type contains 'pixelie': ${planType.contains("pixelie", ignoreCase = true)}")
+                android.util.Log.d("LoginActivity", "🔍 Plan type contains 'basic': ${planType.contains("basic", ignoreCase = true)}")
                 
                 // Verificar tipo de plan - comparación estricta (igual que en BenefitsActivity)
                 val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true)
                 
                 android.util.Log.d("LoginActivity", "✅ isPremiumPlan: $isPremiumPlan")
+                android.util.Log.d("LoginActivity", "✅ hasSubscription: ${statusResponse.hasSubscription}")
+                android.util.Log.d("LoginActivity", "✅ Condición completa: ${isPremiumPlan && statusResponse.hasSubscription}")
                 
                 val intent = if (isPremiumPlan && statusResponse.hasSubscription) {
-                    android.util.Log.d("LoginActivity", "✅ Redirigiendo a MainActivityPremium")
+                    android.util.Log.d("LoginActivity", "✅✅✅ REDIRIGIENDO A MainActivityPremium ✅✅✅")
                     Intent(this@LoginActivity, MainActivityPremium::class.java)
                 } else {
-                    android.util.Log.d("LoginActivity", "✅ Redirigiendo a MainActivity (básico)")
+                    android.util.Log.d("LoginActivity", "✅✅✅ REDIRIGIENDO A MainActivity (básico) ✅✅✅")
                     Intent(this@LoginActivity, MainActivity::class.java)
                 }
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -160,8 +173,10 @@ class LoginActivity : AppCompatActivity() {
                 finish()
             }.onFailure { error ->
                 android.util.Log.e("LoginActivity", "❌ Error al verificar plan: ${error.message}")
+                android.util.Log.e("LoginActivity", "❌ Error stack trace:")
                 error.printStackTrace()
                 // En caso de error, ir a MainActivity básico por defecto
+                android.util.Log.d("LoginActivity", "Redirigiendo a MainActivity por error")
                 val intent = Intent(this@LoginActivity, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
