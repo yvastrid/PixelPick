@@ -135,14 +135,43 @@ class BenefitsActivity : AppCompatActivity() {
     private fun activatePremiumPlan() {
         lifecycleScope.launch {
             android.util.Log.d("BenefitsActivity", "=== ACTIVANDO PLAN PREMIUM ===")
-            val result = subscriptionRepository.activatePremiumPlan()
-            result.onSuccess {
-                android.util.Log.d("BenefitsActivity", "✅ Plan premium activado exitosamente en backend")
-                Toast.makeText(
-                    this@BenefitsActivity,
-                    "¡Plan premium activado exitosamente!",
-                    Toast.LENGTH_LONG
-                ).show()
+            
+            // Verificar primero si ya tiene periodo pagado activo
+            val checkResult = subscriptionRepository.getSubscriptionStatus()
+            checkResult.onSuccess { statusResponse ->
+                val subscription = statusResponse.subscription
+                val currentPeriodEnd = subscription?.currentPeriodEnd
+                
+                if (currentPeriodEnd != null) {
+                    // Verificar si el periodo aún está activo
+                    try {
+                        val periodEndDate = java.time.Instant.parse(currentPeriodEnd).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                        val now = java.time.LocalDateTime.now()
+                        
+                        if (periodEndDate.isAfter(now)) {
+                            // Aún tiene periodo pagado activo, bloquear suscripción
+                            android.util.Log.d("BenefitsActivity", "❌ Usuario tiene periodo pagado activo hasta $currentPeriodEnd")
+                            Toast.makeText(
+                                this@BenefitsActivity,
+                                "Ya tienes un periodo pagado activo. No puedes volver a suscribirte hasta que termine tu periodo actual.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            return@onSuccess
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("BenefitsActivity", "Error al parsear fecha: ${e.message}")
+                    }
+                }
+                
+                // Proceder con la activación
+                val result = subscriptionRepository.activatePremiumPlan()
+                result.onSuccess { message ->
+                    android.util.Log.d("BenefitsActivity", "✅ Plan premium activado exitosamente en backend: $message")
+                    Toast.makeText(
+                        this@BenefitsActivity,
+                        message,
+                        Toast.LENGTH_LONG
+                    ).show()
                 
                 // Esperar un momento para que el mensaje se muestre y el backend procese
                 kotlinx.coroutines.delay(1500)  // Aumentar delay para asegurar que el backend procese
@@ -358,7 +387,7 @@ class BenefitsActivity : AppCompatActivity() {
         }
     }
     
-    private fun applyPremiumPlanViewOnly() {
+    private fun applyPremiumPlanViewOnly(hasPaidPeriod: Boolean = false, periodEnd: String? = null) {
         // Modo view cuando tiene plan premium: mostrar solo el plan premium (sin opción de cambiar)
         binding.basicPlanCard.visibility = View.GONE
         binding.premiumPlanCard.visibility = View.VISIBLE
@@ -367,8 +396,23 @@ class BenefitsActivity : AppCompatActivity() {
         binding.purchaseButton.isEnabled = false
         binding.purchaseButton.isClickable = false
         
-        // Ocultar nota de cambio de plan
-        binding.planChangeNote.visibility = View.GONE
+        // Mostrar nota si hay periodo pagado activo y cancel_at_period_end es true
+        if (hasPaidPeriod && periodEnd != null) {
+            try {
+                val periodEndDate = java.time.Instant.parse(periodEnd).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                val formattedDate = java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", java.util.Locale("es"))
+                val dateString = periodEndDate.format(formattedDate)
+                
+                binding.planChangeNote.visibility = View.VISIBLE
+                binding.planChangeNote.text = "Nota: Tienes acceso premium hasta el $dateString debido a tu periodo pagado. Después de esa fecha, tu plan cambiará automáticamente al plan básico."
+            } catch (e: Exception) {
+                android.util.Log.e("BenefitsActivity", "Error al formatear fecha: ${e.message}")
+                binding.planChangeNote.visibility = View.VISIBLE
+                binding.planChangeNote.text = "Nota: Tienes acceso premium hasta que termine tu periodo pagado. Después de esa fecha, tu plan cambiará automáticamente al plan básico."
+            }
+        } else {
+            binding.planChangeNote.visibility = View.GONE
+        }
     }
     
     private fun applyBasicPlanSelectedState() {

@@ -28,7 +28,10 @@ data class Subscription(
     val currentPeriodEnd: String? = null,
     
     @SerializedName("cancel_at_period_end")
-    val cancelAtPeriodEnd: Boolean? = null
+    val cancelAtPeriodEnd: Boolean? = null,
+    
+    @SerializedName("has_premium_access")
+    val hasPremiumAccess: Boolean? = null
 )
 
 data class SubscriptionStatusResponse(

@@ -158,11 +158,15 @@ class MainActivity : AppCompatActivity() {
                     android.util.Log.d("MainActivity", "Status: '$status'")
                     
                     // Verificar si es plan premium
-                    // El plan premium tiene plan_type='pixelie_plan' (sin guión bajo después de pixelie)
-                    isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) ||
-                                   (planType.contains("pixelie", ignoreCase = true) && 
-                                    !planType.contains("basic", ignoreCase = true) &&
-                                    planType.contains("plan", ignoreCase = true))
+                    // Considerar acceso premium si:
+                    // 1. plan_type es 'pixelie_plan' O
+                    // 2. tiene periodo pagado activo (has_premium_access = true)
+                    val hasPremiumAccess = subscription.hasPremiumAccess == true
+                    isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
+                    
+                    android.util.Log.d("MainActivity", "hasPremiumAccess: $hasPremiumAccess")
+                    android.util.Log.d("MainActivity", "currentPeriodEnd: ${subscription.currentPeriodEnd}")
+                    android.util.Log.d("MainActivity", "cancelAtPeriodEnd: ${subscription.cancelAtPeriodEnd}")
                     
                     android.util.Log.d("MainActivity", "isPremiumPlan determinado: $isPremiumPlan")
                     android.util.Log.d("MainActivity", "Comparación detallada:")

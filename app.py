@@ -1525,14 +1525,23 @@ def activate_premium_plan():
         ).first()
         
         if existing_subscription:
+            # Verificar si ya tiene un periodo pagado activo
+            if existing_subscription.current_period_end and existing_subscription.current_period_end > datetime.utcnow():
+                # Ya tiene periodo pagado activo, no puede volver a suscribirse
+                return jsonify({
+                    'success': False,
+                    'error': 'Ya tienes un periodo pagado activo. No puedes volver a suscribirte hasta que termine tu periodo actual.',
+                    'current_period_end': existing_subscription.current_period_end.isoformat() if existing_subscription.current_period_end else None
+                }), 400
+            
             # Si ya tiene una suscripción activa, actualizarla a premium
             existing_subscription.plan_type = 'pixelie_plan'
             existing_subscription.amount = 250.00  # Precio del plan premium
             existing_subscription.currency = 'MXN'
             existing_subscription.status = 'active'
             existing_subscription.current_period_start = datetime.utcnow()
-            # El plan premium no expira por ahora (para testing)
-            existing_subscription.current_period_end = None
+            # Establecer periodo de 30 días
+            existing_subscription.current_period_end = datetime.utcnow() + timedelta(days=30)
             existing_subscription.cancel_at_period_end = False  # Cancelar cualquier cancelación programada
         else:
             # Crear nueva suscripción premium
@@ -1544,7 +1553,7 @@ def activate_premium_plan():
                 status='active',
                 subscription_id=None,  # No hay ID de Stripe para testing
                 current_period_start=datetime.utcnow(),
-                current_period_end=None  # El plan premium no expira por ahora (para testing)
+                current_period_end=datetime.utcnow() + timedelta(days=30)  # Periodo de 30 días
             )
             db.session.add(premium_subscription)
         

@@ -158,8 +158,11 @@ class LoginActivity : AppCompatActivity() {
                 android.util.Log.d("LoginActivity", "🔍 Plan type contains 'pixelie': ${planType.contains("pixelie", ignoreCase = true)}")
                 android.util.Log.d("LoginActivity", "🔍 Plan type contains 'basic': ${planType.contains("basic", ignoreCase = true)}")
                 
-                // Verificar tipo de plan - comparación estricta (igual que en BenefitsActivity)
-                val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true)
+                // Verificar tipo de plan - considerar acceso premium por periodo pagado
+                val hasPremiumAccess = statusResponse.subscription?.hasPremiumAccess == true
+                val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
+                
+                android.util.Log.d("LoginActivity", "hasPremiumAccess: $hasPremiumAccess")
                 
                 android.util.Log.d("LoginActivity", "✅ isPremiumPlan: $isPremiumPlan")
                 android.util.Log.d("LoginActivity", "✅ hasSubscription: ${statusResponse.hasSubscription}")
