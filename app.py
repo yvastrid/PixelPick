@@ -818,6 +818,19 @@ def get_recommendations():
             for game in additional_games[:3 - len(recommended_games_with_scores)]:
                 recommended_games_with_scores.append((game, 0))
         
+        # Mapeo de categorías en inglés a español
+        category_translations = {
+            'arcade': 'acción rápida',
+            'match-3': 'puzzle de combinación',
+            'puzzle': 'puzzle',
+            'memory': 'memoria',
+            'strategy': 'estrategia',
+            'racing': 'carreras',
+            'fps': 'disparos',
+            'sandbox': 'mundo abierto',
+            'simulation': 'simulación'
+        }
+        
         # Generar razones de recomendación para cada juego
         games_data = []
         for game, score in recommended_games_with_scores[:3]:
@@ -826,15 +839,22 @@ def get_recommendations():
             # Generar razón de recomendación basada en el análisis
             reason = ""
             if game.id not in played_game_ids:
+                # Si el usuario no ha jugado este juego
                 if game.category and game.category.lower() in played_categories:
-                    category_name = game.category
-                    reason = f"Te gustan los juegos de {category_name}"
+                    # Si ha jugado juegos de la misma categoría
+                    category_es = category_translations.get(game.category.lower(), game.category.lower())
+                    reason = f"Te gustan los juegos de {category_es}"
+                elif game.category:
+                    # Si tiene categoría pero no ha jugado juegos similares
+                    category_es = category_translations.get(game.category.lower(), game.category.lower())
+                    reason = f"Perfecto si te gustan los juegos de {category_es}"
                 else:
                     reason = "Nuevo juego perfecto para ti"
             else:
+                # Si el usuario ya ha jugado este juego
                 if game.category:
-                    category_name = game.category
-                    reason = f"Basado en tu interés por {category_name}"
+                    category_es = category_translations.get(game.category.lower(), game.category.lower())
+                    reason = f"Basado en tu interés por juegos de {category_es}"
                 else:
                     reason = "Recomendado según tus preferencias"
             
