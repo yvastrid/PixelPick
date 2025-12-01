@@ -55,14 +55,16 @@ class SubscriptionRepository(
         }
     }
     
-    suspend fun activateBasicPlan(): Result<Unit> {
+    suspend fun activateBasicPlan(): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.activateBasicPlan()
                 if (response.isSuccessful && response.body() != null) {
                     val apiResponse = response.body()!!
                     if (apiResponse.success) {
-                        Result.success(Unit)
+                        // Devolver el mensaje del backend
+                        val message = apiResponse.message ?: "Plan básico activado exitosamente"
+                        Result.success(message)
                     } else {
                         Result.failure(Exception(apiResponse.message ?: apiResponse.error ?: "Error desconocido"))
                     }

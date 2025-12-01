@@ -69,19 +69,54 @@ class BenefitsActivity : AppCompatActivity() {
     
     private fun activateBasicPlan() {
         lifecycleScope.launch {
+            android.util.Log.d("BenefitsActivity", "=== ACTIVANDO PLAN BÁSICO ===")
             val result = subscriptionRepository.activateBasicPlan()
-            result.onSuccess {
+            result.onSuccess { message ->
+                android.util.Log.d("BenefitsActivity", "✅ Plan básico activado: $message")
                 Toast.makeText(
                     this@BenefitsActivity,
-                    "¡Plan básico activado exitosamente!",
+                    message,
                     Toast.LENGTH_LONG
                 ).show()
-                // Volver a MainActivity
-                val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                startActivity(intent)
-                finish()
+                
+                // Esperar un momento para que el mensaje se muestre
+                kotlinx.coroutines.delay(1500)
+                
+                // Verificar el plan después de activar básico
+                val verifyResult = subscriptionRepository.getSubscriptionStatus()
+                verifyResult.onSuccess { statusResponse ->
+                    val planType = statusResponse.subscription?.planType ?: ""
+                    val isPremium = planType.equals("pixelie_plan", ignoreCase = true) ||
+                                   (planType.contains("pixelie", ignoreCase = true) && 
+                                    !planType.contains("basic", ignoreCase = true) &&
+                                    planType.contains("plan", ignoreCase = true))
+                    
+                    android.util.Log.d("BenefitsActivity", "Plan verificado después de activar básico: planType=$planType, isPremium=$isPremium")
+                    
+                    // Redirigir a la Activity correspondiente según el plan
+                    val intent = if (isPremium && statusResponse.hasSubscription) {
+                        // Si aún es premium (periodo pagado activo), volver a premium
+                        android.util.Log.d("BenefitsActivity", "✅ Redirigiendo a MainActivityPremium (periodo pagado activo)")
+                        Intent(this@BenefitsActivity, com.pixelpick.app.ui.main.MainActivityPremium::class.java)
+                    } else {
+                        // Si ya cambió a básico, ir a básico
+                        android.util.Log.d("BenefitsActivity", "✅ Redirigiendo a MainActivity (plan básico)")
+                        Intent(this@BenefitsActivity, MainActivity::class.java)
+                    }
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }.onFailure { error ->
+                    android.util.Log.e("BenefitsActivity", "❌ Error al verificar estado: ${error.message}")
+                    // En caso de error, ir a MainActivity básico
+                    val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
+                    finish()
+                }
             }.onFailure { error ->
+                android.util.Log.e("BenefitsActivity", "❌ Error al activar plan básico: ${error.message}")
+                error.printStackTrace()
                 Toast.makeText(
                     this@BenefitsActivity,
                     "Error al activar plan básico: ${error.message}",
