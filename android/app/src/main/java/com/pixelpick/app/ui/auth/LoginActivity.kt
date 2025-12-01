@@ -19,7 +19,6 @@ import com.pixelpick.app.util.onFailure
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import com.pixelpick.app.util.SessionManager
-import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
     
