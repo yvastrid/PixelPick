@@ -39,8 +39,10 @@ class RecentGamesAdapter(
                 val firstLetter = game.name.firstOrNull()?.toString() ?: "G"
                 binding.recentGamePlaceholder.text = firstLetter
 
-                // Mostrar nombre del juego
+                // Mostrar nombre del juego en gris oscuro
                 binding.recentGameTitle.text = game.name
+                binding.recentGameTitle.setTextColor(android.graphics.Color.parseColor("#4A4A4A"))
+                binding.recentGameTitle.visibility = View.VISIBLE
 
                 // Formatear tiempo relativo
                 userGame.lastPlayed?.let { lastPlayedStr ->

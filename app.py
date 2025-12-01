@@ -753,12 +753,81 @@ def get_games():
 @app.route('/api/games/recommendations', methods=['GET'])
 @login_required
 def get_recommendations():
-    """Obtener recomendaciones de juegos para el usuario"""
+    """Obtener recomendaciones de juegos basadas en los juegos que el usuario ha jugado"""
     try:
-        # Por ahora, devolvemos los primeros 3 juegos
-        # En el futuro, aquí se implementaría la lógica de IA
-        games = Game.query.limit(3).all()
-        games_data = [game.to_dict() for game in games]
+        user = current_user
+        
+        # Obtener juegos que el usuario ha jugado
+        user_games = UserGame.query.filter_by(user_id=user.id).all()
+        played_game_ids = [ug.game_id for ug in user_games]
+        
+        # Obtener todos los juegos del catálogo (los 5 juegos chistosos)
+        funny_game_names = ['Frootilupis Match', 'Chocopops Volador', 'SnackAttack Laberinto', 
+                           'CerealKiller Connect', 'Munchies Memory', 'Flootilupis', 'Chocopops', 
+                           'SnackAttack', 'CerealKiller', 'Munchies']
+        all_games = Game.query.filter(Game.name.in_(funny_game_names)).all()
+        
+        # Si el usuario no ha jugado ningún juego, recomendar los primeros 3
+        if not played_game_ids:
+            recommended_games = all_games[:3]
+        else:
+            # Analizar categorías de los juegos que ha jugado
+            played_games = Game.query.filter(Game.id.in_(played_game_ids)).all()
+            played_categories = {}
+            played_categories_list = []
+            
+            for game in played_games:
+                if game.category:
+                    category = game.category.lower()
+                    played_categories[category] = played_categories.get(category, 0) + 1
+                    if category not in played_categories_list:
+                        played_categories_list.append(category)
+            
+            # Calcular puntuación de recomendación para cada juego no jugado
+            game_scores = []
+            for game in all_games:
+                if game.id not in played_game_ids:
+                    score = 0
+                    
+                    # Puntos por categoría similar
+                    if game.category and game.category.lower() in played_categories:
+                        score += played_categories[game.category.lower()] * 10
+                    
+                    # Puntos por plataforma (si coincide)
+                    if game.platforms:
+                        platforms = game.platforms.split(',') if isinstance(game.platforms, str) else game.platforms
+                        if 'Android' in platforms:
+                            score += 5
+                    
+                    # Bonus si es gratis (mayor probabilidad de que lo pruebe)
+                    if game.price == 0.00:
+                        score += 3
+                    
+                    game_scores.append((game, score))
+            
+            # Ordenar por puntuación y tomar los mejores
+            game_scores.sort(key=lambda x: x[1], reverse=True)
+            
+            # Si hay juegos con puntuación > 0, tomar los mejores
+            # Si no, tomar juegos aleatorios que no haya jugado
+            if game_scores and game_scores[0][1] > 0:
+                recommended_games = [gs[0] for gs in game_scores[:3]]
+            else:
+                # Si no hay preferencias claras, recomendar juegos que no ha jugado
+                unplayed_games = [g for g in all_games if g.id not in played_game_ids]
+                recommended_games = unplayed_games[:3] if len(unplayed_games) >= 3 else unplayed_games
+        
+        # Si no hay suficientes recomendaciones, completar con juegos aleatorios
+        if len(recommended_games) < 3:
+            remaining_needed = 3 - len(recommended_games)
+            recommended_ids = [g.id for g in recommended_games]
+            additional_games = Game.query.filter(
+                ~Game.id.in_(recommended_ids + played_game_ids),
+                Game.name.in_(funny_game_names)
+            ).limit(remaining_needed).all()
+            recommended_games.extend(additional_games)
+        
+        games_data = [game.to_dict() for game in recommended_games[:3]]
         
         return jsonify({
             'success': True,
@@ -766,7 +835,20 @@ def get_recommendations():
         }), 200
         
     except Exception as e:
-        return jsonify({'error': f'Error al obtener recomendaciones: {str(e)}'}), 500
+        logger.error(f"Error al obtener recomendaciones: {str(e)}")
+        logger.error(traceback.format_exc())
+        # En caso de error, devolver juegos por defecto
+        try:
+            funny_game_names = ['Frootilupis Match', 'Chocopops Volador', 'SnackAttack Laberinto', 
+                               'CerealKiller Connect', 'Munchies Memory']
+            default_games = Game.query.filter(Game.name.in_(funny_game_names)).limit(3).all()
+            games_data = [game.to_dict() for game in default_games]
+            return jsonify({
+                'success': True,
+                'recommendations': games_data
+            }), 200
+        except:
+            return jsonify({'error': f'Error al obtener recomendaciones: {str(e)}'}), 500
 
 @app.route('/api/user/games', methods=['GET'])
 @login_required

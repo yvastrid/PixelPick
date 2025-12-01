@@ -18,14 +18,26 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:background="@color/card_background">
+            android:background="@drawable/bg_gradient">
 
             <ImageView
                 android:id="@+id/gameImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:contentDescription="Game image" />
+                android:contentDescription="Game image"
+                android:visibility="gone" />
+
+            <!-- Placeholder con primera letra -->
+            <TextView
+                android:id="@+id/gamePlaceholder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="G"
+                android:textColor="#1AFFFFFF"
+                android:textSize="72sp"
+                android:textStyle="bold" />
 
             <!-- Badge -->
             <TextView

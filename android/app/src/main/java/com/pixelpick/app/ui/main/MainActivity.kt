@@ -41,6 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var gameRepository: GameRepository
     private lateinit var subscriptionRepository: SubscriptionRepository
     private var profilePopupWindow: PopupWindow? = null
+    private lateinit var recommendationsAdapter: RecommendationsAdapter
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         subscriptionRepository = SubscriptionRepository(RetrofitClient.apiService)
         
         setupViews()
+        setupRecommendationsRecyclerView()
         animateViews()
         loadUserData()
         checkSubscriptionStatus()
@@ -226,14 +228,37 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
+    private fun setupRecommendationsRecyclerView() {
+        recommendationsAdapter = RecommendationsAdapter(emptyList()) { game ->
+            // Callback cuando se hace clic en un juego recomendado
+            android.util.Log.d("MainActivity", "Clic en juego recomendado: ${game.name}")
+        }
+        binding.gamesRecyclerView.apply {
+            layoutManager = GridLayoutManager(this@MainActivity, 1)
+            adapter = recommendationsAdapter
+        }
+    }
+    
     private fun loadRecommendations() {
         lifecycleScope.launch {
             val result = gameRepository.getRecommendations()
             result.onSuccess { games ->
-                // TODO: Mostrar juegos en RecyclerView
-                Toast.makeText(this@MainActivity, "Cargados ${games.size} juegos", Toast.LENGTH_SHORT).show()
+                android.util.Log.d("MainActivity", "Recomendaciones cargadas: ${games.size} juegos")
+                if (games.isNotEmpty()) {
+                    recommendationsAdapter = RecommendationsAdapter(games) { game ->
+                        android.util.Log.d("MainActivity", "Clic en juego recomendado: ${game.name}")
+                    }
+                    binding.gamesRecyclerView.adapter = recommendationsAdapter
+                    binding.gamesRecyclerView.visibility = View.VISIBLE
+                    binding.emptyStateLayout.visibility = View.GONE
+                } else {
+                    binding.gamesRecyclerView.visibility = View.GONE
+                    binding.emptyStateLayout.visibility = View.VISIBLE
+                }
             }.onFailure { error ->
-                Toast.makeText(this@MainActivity, error.message, Toast.LENGTH_SHORT).show()
+                android.util.Log.e("MainActivity", "Error al cargar recomendaciones: ${error.message}")
+                binding.gamesRecyclerView.visibility = View.GONE
+                binding.emptyStateLayout.visibility = View.VISIBLE
             }
         }
     }
