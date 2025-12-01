@@ -158,12 +158,16 @@ class BenefitsActivity : AppCompatActivity() {
                     // Verificar tipo de plan
                     val isBasicPlan = planType.contains("basic", ignoreCase = true) || 
                                      planType.contains("pixelie_basic", ignoreCase = true)
+                    // El plan premium tiene plan_type='pixelie_plan' exactamente
                     val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) ||
                                        (planType.contains("pixelie", ignoreCase = true) && 
                                         !planType.contains("basic", ignoreCase = true) &&
                                         planType.contains("plan", ignoreCase = true))
                     
                     android.util.Log.d("BenefitsActivity", "isBasicPlan: $isBasicPlan, isPremiumPlan: $isPremiumPlan")
+                    android.util.Log.d("BenefitsActivity", "Comparación detallada:")
+                    android.util.Log.d("BenefitsActivity", "  - planType.equals('pixelie_plan'): ${planType.equals("pixelie_plan", ignoreCase = true)}")
+                    android.util.Log.d("BenefitsActivity", "  - contiene 'pixelie' y no 'basic': ${planType.contains("pixelie", ignoreCase = true) && !planType.contains("basic", ignoreCase = true)}")
                     
                     // Determinar el nombre del plan
                     val planName = when {
