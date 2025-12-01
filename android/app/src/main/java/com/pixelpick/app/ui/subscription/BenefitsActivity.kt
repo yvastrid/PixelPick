@@ -92,12 +92,10 @@ class BenefitsActivity : AppCompatActivity() {
                 val verifyResult = subscriptionRepository.getSubscriptionStatus()
                 verifyResult.onSuccess { statusResponse ->
                     val planType = statusResponse.subscription?.planType ?: ""
-                    val isPremium = planType.equals("pixelie_plan", ignoreCase = true) ||
-                                   (planType.contains("pixelie", ignoreCase = true) && 
-                                    !planType.contains("basic", ignoreCase = true) &&
-                                    planType.contains("plan", ignoreCase = true))
+                    val hasPremiumAccess = statusResponse.subscription?.hasPremiumAccess == true
+                    val isPremium = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
                     
-                    android.util.Log.d("BenefitsActivity", "Plan verificado después de activar básico: planType=$planType, isPremium=$isPremium")
+                    android.util.Log.d("BenefitsActivity", "Plan verificado después de activar básico: planType=$planType, hasPremiumAccess=$hasPremiumAccess, isPremium=$isPremium")
                     
                     // Redirigir a la Activity correspondiente según el plan
                     val intent = if (isPremium && statusResponse.hasSubscription) {
@@ -187,12 +185,11 @@ class BenefitsActivity : AppCompatActivity() {
                     android.util.Log.d("BenefitsActivity", "Plan type verificado: '$planType'")
                     android.util.Log.d("BenefitsActivity", "Status verificado: '$status'")
                     
-                    // Verificar si es plan premium
-                    val isPremium = planType.equals("pixelie_plan", ignoreCase = true) ||
-                                   (planType.contains("pixelie", ignoreCase = true) && 
-                                    !planType.contains("basic", ignoreCase = true) &&
-                                    planType.contains("plan", ignoreCase = true))
+                    // Verificar si es plan premium (considerar acceso premium por periodo pagado)
+                    val hasPremiumAccess = statusResponse.subscription?.hasPremiumAccess == true
+                    val isPremium = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
                     
+                    android.util.Log.d("BenefitsActivity", "hasPremiumAccess: $hasPremiumAccess")
                     android.util.Log.d("BenefitsActivity", "isPremium determinado: $isPremium")
                     
                     // Redirigir a la Activity correspondiente según el plan
