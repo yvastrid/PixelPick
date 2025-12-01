@@ -42,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var subscriptionRepository: SubscriptionRepository
     private var profilePopupWindow: PopupWindow? = null
     private lateinit var recommendationsAdapter: RecommendationsAdapter
+    private var isPremiumPlan: Boolean = false  // true si tiene plan premium, false si tiene básico
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,16 +58,19 @@ class MainActivity : AppCompatActivity() {
         setupRecommendationsRecyclerView()
         animateViews()
         loadUserData()
+        // Verificar estado de suscripción primero, luego cargar contenido según el plan
         checkSubscriptionStatus()
-        loadRecommendations()
-        loadCatalog()
+        // loadRecommendations() y loadCatalog() se llamarán desde applyPlanRestrictions()
     }
     
     override fun onResume() {
         super.onResume()
-        // Recargar recomendaciones cuando el usuario vuelve a la pantalla principal
-        // Esto asegura que las recomendaciones se actualicen dinámicamente
-        loadRecommendations()
+        // Recargar estado de suscripción y aplicar restricciones
+        checkSubscriptionStatus()
+        // Recargar recomendaciones solo si es plan premium
+        if (isPremiumPlan) {
+            loadRecommendations()
+        }
     }
     
     private fun animateViews() {
@@ -138,9 +142,41 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun checkSubscriptionStatus() {
-        // El botón "Suscríbete ahora" siempre está visible
-        // Permite upgrade si tiene básico o ver opciones si tiene premium
-        binding.subscribeButton.visibility = android.view.View.VISIBLE
+        lifecycleScope.launch {
+            val result = subscriptionRepository.getSubscriptionStatus()
+            result.onSuccess { statusResponse ->
+                if (statusResponse.hasSubscription && statusResponse.subscription != null) {
+                    val planType = statusResponse.subscription.planType ?: ""
+                    // Verificar si es plan premium
+                    isPremiumPlan = planType.contains("pixelie_plan", ignoreCase = true) && 
+                                   !planType.contains("basic", ignoreCase = true)
+                } else {
+                    // Si no tiene suscripción, es plan básico por defecto
+                    isPremiumPlan = false
+                }
+                
+                // Aplicar restricciones según el plan
+                applyPlanRestrictions()
+            }.onFailure { error ->
+                // En caso de error, asumir plan básico
+                android.util.Log.e("MainActivity", "Error al verificar suscripción: ${error.message}")
+                isPremiumPlan = false
+                applyPlanRestrictions()
+            }
+        }
+    }
+    
+    private fun applyPlanRestrictions() {
+        // Ocultar/mostrar sección de Recomendaciones IA según el plan
+        if (isPremiumPlan) {
+            binding.aiRecommendationsSection.visibility = View.VISIBLE
+            loadRecommendations()
+        } else {
+            binding.aiRecommendationsSection.visibility = View.GONE
+        }
+        
+        // Recargar catálogo con restricciones aplicadas
+        loadCatalog()
     }
     
     private fun showProfileMenu(anchor: View) {
@@ -318,8 +354,22 @@ class MainActivity : AppCompatActivity() {
                     android.util.Log.d("MainActivity", "✅ Mostrando ${catalogGames.size} juegos en el catálogo")
                     binding.catalogRecyclerView.visibility = View.VISIBLE
                     binding.catalogEmptyStateLayout.visibility = View.GONE
-                    val adapter = CatalogAdapter(catalogGames) { game ->
-                        Toast.makeText(this@MainActivity, "Este juego no está disponible aún", Toast.LENGTH_SHORT).show()
+                    val adapter = CatalogAdapter(catalogGames, isPremiumPlan) { game ->
+                        if (!isPremiumPlan) {
+                            // Si es plan básico y el juego está bloqueado, mostrar mensaje
+                            val gameIndex = catalogGames.indexOfFirst { it.id == game.id }
+                            if (gameIndex > 0) {  // Solo el primer juego (índice 0) está desbloqueado
+                                Toast.makeText(this@MainActivity, "Actualiza a Premium para desbloquear este juego", Toast.LENGTH_LONG).show()
+                                // Opcional: abrir pantalla de suscripción
+                                val intent = Intent(this@MainActivity, BenefitsActivity::class.java)
+                                intent.putExtra("mode", "upgrade")
+                                startActivity(intent)
+                            } else {
+                                Toast.makeText(this@MainActivity, "Este juego no está disponible aún", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(this@MainActivity, "Este juego no está disponible aún", Toast.LENGTH_SHORT).show()
+                        }
                     }
                     // Carrusel horizontal
                     val layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
