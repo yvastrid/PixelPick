@@ -71,7 +71,7 @@ class MainActivity : AppCompatActivity() {
         // Esto asegura que si el usuario cambió de plan, se actualicen las restricciones
         // Agregar un pequeño delay para asegurar que el backend haya procesado el cambio
         lifecycleScope.launch {
-            kotlinx.coroutines.delay(300)  // Esperar 300ms para que el backend procese
+            kotlinx.coroutines.delay(500)  // Esperar 500ms para que el backend procese
             checkSubscriptionStatus()
         }
     }
