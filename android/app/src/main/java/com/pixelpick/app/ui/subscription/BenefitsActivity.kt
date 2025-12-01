@@ -254,25 +254,24 @@ class BenefitsActivity : AppCompatActivity() {
                     
                     // Aplicar lógica según el modo
                     if (mode == "upgrade") {
-                        // Modo "Suscríbete ahora": mostrar el plan opuesto
+                        // Modo "Suscríbete ahora": mostrar el plan opuesto para cambiar
                         if (isBasicPlan && subscription.status == "active") {
                             // Tiene básico → mostrar premium para upgrade
                             applyUpgradeModeBasic()
                         } else if (isPremiumPlan && subscription.status == "active") {
-                            // Tiene premium → mostrar básico difuminado (no puede downgrade)
-                            applyUpgradeModePremium()
+                            // Tiene premium → mostrar básico como opción para cambiar
+                            applyUpgradeModePremiumForChange()
                         } else {
                             // Por defecto, mostrar premium
                             applyUpgradeModeBasic()
                         }
                     } else {
-                        // Modo "view" (desde menú de perfil): mostrar plan activo
+                        // Modo "view" (desde menú de perfil): mostrar solo plan activo (sin opción de cambiar)
                         if (isBasicPlan && subscription.status == "active") {
                             applyBasicPlanSelectedState()
                         } else if (isPremiumPlan && subscription.status == "active") {
-                            // Verificar si hay periodo pagado activo para mostrar la nota
-                            val hasPaidPeriod = subscription.currentPeriodEnd != null
-                            applyPremiumPlanSelectedState(hasPaidPeriod)
+                            // Solo mostrar el plan premium, sin opción de cambiar
+                            applyPremiumPlanViewOnly()
                         } else {
                             // Por defecto, básico
                             applyBasicPlanSelectedState()
@@ -324,6 +323,19 @@ class BenefitsActivity : AppCompatActivity() {
         binding.premiumPlanCard.visibility = View.GONE
     }
     
+    private fun applyUpgradeModePremiumForChange() {
+        // Modo upgrade cuando tiene plan premium: mostrar básico como opción para cambiar
+        binding.basicPlanCard.visibility = View.VISIBLE
+        binding.basicPlanCard.alpha = 1f
+        binding.selectBasicButton.text = "Cambiar a Plan Básico"
+        binding.selectBasicButton.isEnabled = true
+        binding.selectBasicButton.isClickable = true
+        binding.premiumPlanCard.visibility = View.GONE
+        
+        // Ocultar nota de cambio de plan
+        binding.planChangeNote.visibility = View.GONE
+    }
+    
     private fun applyPremiumPlanSelectedState(hasPaidPeriod: Boolean = false) {
         // Modo view cuando tiene plan premium: mostrar ambos planes, premium marcado
         binding.basicPlanCard.visibility = View.VISIBLE
@@ -344,6 +356,19 @@ class BenefitsActivity : AppCompatActivity() {
         } else {
             binding.planChangeNote.visibility = View.GONE
         }
+    }
+    
+    private fun applyPremiumPlanViewOnly() {
+        // Modo view cuando tiene plan premium: mostrar solo el plan premium (sin opción de cambiar)
+        binding.basicPlanCard.visibility = View.GONE
+        binding.premiumPlanCard.visibility = View.VISIBLE
+        binding.premiumPlanCard.alpha = 0.6f
+        binding.purchaseButton.text = "Plan Actual"
+        binding.purchaseButton.isEnabled = false
+        binding.purchaseButton.isClickable = false
+        
+        // Ocultar nota de cambio de plan
+        binding.planChangeNote.visibility = View.GONE
     }
     
     private fun applyBasicPlanSelectedState() {
