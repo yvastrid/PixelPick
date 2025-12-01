@@ -11,6 +11,13 @@ import com.pixelpick.app.data.models.LoginRequest
 import com.pixelpick.app.data.repository.AuthRepository
 import com.pixelpick.app.databinding.ActivityLoginBinding
 import com.pixelpick.app.ui.main.MainActivity
+import com.pixelpick.app.ui.main.MainActivityPremium
+import com.pixelpick.app.data.api.RetrofitClient
+import com.pixelpick.app.data.repository.SubscriptionRepository
+import com.pixelpick.app.util.onSuccess
+import com.pixelpick.app.util.onFailure
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.pixelpick.app.util.SessionManager
 import kotlinx.coroutines.launch
 
@@ -99,8 +106,8 @@ class LoginActivity : AppCompatActivity() {
                 
                 result.onSuccess { response ->
                     Toast.makeText(this@LoginActivity, R.string.success_login, Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this@LoginActivity, MainActivity::class.java))
-                    finish()
+                    // Verificar el plan del usuario y redirigir a la Activity correspondiente
+                    checkPlanAndRedirect()
                 }.onFailure { error ->
                     Toast.makeText(this@LoginActivity, error.message ?: getString(R.string.error_login), Toast.LENGTH_LONG).show()
                 }
