@@ -43,6 +43,12 @@ class BenefitsActivity : AppCompatActivity() {
         }
     }
     
+    override fun onResume() {
+        super.onResume()
+        // Refrescar el estado de suscripción cuando el usuario vuelve a esta pantalla
+        loadSubscriptionStatus()
+    }
+    
     private fun setupViews() {
         // Verificar si el usuario está logueado
         if (!sessionManager.isLoggedIn()) {

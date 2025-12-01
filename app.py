@@ -1391,16 +1391,19 @@ def get_subscription_status():
         
         subscription_data = None
         if active_subscription:
+            logger.info(f"Usuario {current_user.id} tiene suscripción activa: plan_type='{active_subscription.plan_type}', status='{active_subscription.status}'")
             subscription_data = {
                 'id': active_subscription.id,
                 'user_id': active_subscription.user_id,
-                'plan_type': active_subscription.plan_type,
+                'plan_type': active_subscription.plan_type,  # Debería ser 'pixelie_plan' o 'pixelie_basic'
                 'amount': float(active_subscription.amount) if active_subscription.amount else 0.0,
                 'currency': active_subscription.currency,
                 'status': active_subscription.status,
                 'current_period_start': active_subscription.current_period_start.isoformat() if active_subscription.current_period_start else None,
-                'current_period_end': active_subscription.current_period_end.isoformat() if active_subscription.current_period_end else None
+                'current_period_end': active_subscription.current_period_end.isoformat() if active_subscription.current_period_end else None,
+                'cancel_at_period_end': active_subscription.cancel_at_period_end if active_subscription.cancel_at_period_end else False
             }
+            logger.info(f"Enviando subscription_data: {subscription_data}")
         
         return jsonify({
             'success': True,
