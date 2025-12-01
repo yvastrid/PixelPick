@@ -136,23 +136,31 @@ class LoginActivity : AppCompatActivity() {
     private fun checkPlanAndRedirect() {
         val subscriptionRepository = SubscriptionRepository(RetrofitClient.apiService)
         lifecycleScope.launch {
+            android.util.Log.d("LoginActivity", "=== VERIFICANDO PLAN DESPUÉS DE LOGIN ===")
             val result = subscriptionRepository.getSubscriptionStatus()
             result.onSuccess { statusResponse ->
                 val planType = statusResponse.subscription?.planType ?: ""
-                val isPremium = planType.equals("pixelie_plan", ignoreCase = true) ||
-                               (planType.contains("pixelie", ignoreCase = true) && 
-                                !planType.contains("basic", ignoreCase = true) &&
-                                planType.contains("plan", ignoreCase = true))
+                android.util.Log.d("LoginActivity", "🔍 Plan type recibido: '$planType'")
+                android.util.Log.d("LoginActivity", "🔍 hasSubscription: ${statusResponse.hasSubscription}")
                 
-                val intent = if (isPremium && statusResponse.hasSubscription) {
+                // Verificar tipo de plan - comparación estricta (igual que en BenefitsActivity)
+                val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true)
+                
+                android.util.Log.d("LoginActivity", "✅ isPremiumPlan: $isPremiumPlan")
+                
+                val intent = if (isPremiumPlan && statusResponse.hasSubscription) {
+                    android.util.Log.d("LoginActivity", "✅ Redirigiendo a MainActivityPremium")
                     Intent(this@LoginActivity, MainActivityPremium::class.java)
                 } else {
+                    android.util.Log.d("LoginActivity", "✅ Redirigiendo a MainActivity (básico)")
                     Intent(this@LoginActivity, MainActivity::class.java)
                 }
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()
-            }.onFailure {
+            }.onFailure { error ->
+                android.util.Log.e("LoginActivity", "❌ Error al verificar plan: ${error.message}")
+                error.printStackTrace()
                 // En caso de error, ir a MainActivity básico por defecto
                 val intent = Intent(this@LoginActivity, MainActivity::class.java)
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
