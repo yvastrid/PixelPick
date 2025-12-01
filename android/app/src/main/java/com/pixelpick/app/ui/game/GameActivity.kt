@@ -51,8 +51,8 @@ class GameActivity : AppCompatActivity() {
                 var isPremiumPlan = false
                 if (statusResponse.hasSubscription && statusResponse.subscription != null) {
                     val planType = statusResponse.subscription.planType ?: ""
-                    isPremiumPlan = planType.contains("pixelie_plan", ignoreCase = true) && 
-                                   !planType.contains("basic", ignoreCase = true)
+                    val hasPremiumAccess = statusResponse.subscription.hasPremiumAccess == true
+                    isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
                 }
                 
                 // Si es plan básico y el juego no es el primero (índice 0), bloquear acceso

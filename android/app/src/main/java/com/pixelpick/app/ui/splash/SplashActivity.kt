@@ -63,10 +63,12 @@ class SplashActivity : AppCompatActivity() {
             val result = subscriptionRepository.getSubscriptionStatus()
             result.onSuccess { statusResponse ->
                 val planType = statusResponse.subscription?.planType ?: ""
+                val hasPremiumAccess = statusResponse.subscription?.hasPremiumAccess == true
                 android.util.Log.d("SplashActivity", "🔍 Plan type recibido: '$planType'")
+                android.util.Log.d("SplashActivity", "🔍 hasPremiumAccess: $hasPremiumAccess")
                 
-                // Verificar tipo de plan - comparación estricta
-                val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true)
+                // Verificar tipo de plan - considerar acceso premium por periodo pagado
+                val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
                 
                 android.util.Log.d("SplashActivity", "✅ isPremiumPlan: $isPremiumPlan")
                 
