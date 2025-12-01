@@ -25,6 +25,7 @@ import com.pixelpick.app.data.repository.GameRepository
 import com.pixelpick.app.data.repository.SubscriptionRepository
 import com.pixelpick.app.databinding.ActivityMainBinding
 import com.pixelpick.app.databinding.ProfileDropdownBinding
+import com.pixelpick.app.ui.game.GameActivity
 import com.pixelpick.app.ui.profile.ProfileActivity
 import com.pixelpick.app.ui.settings.SettingsActivity
 import com.pixelpick.app.ui.subscription.BenefitsActivity
