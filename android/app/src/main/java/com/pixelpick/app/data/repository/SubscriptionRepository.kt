@@ -75,6 +75,26 @@ class SubscriptionRepository(
         }
     }
     
+    suspend fun activatePremiumPlan(): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = apiService.activatePremiumPlan()
+                if (response.isSuccessful && response.body() != null) {
+                    val apiResponse = response.body()!!
+                    if (apiResponse.success) {
+                        Result.success(Unit)
+                    } else {
+                        Result.failure(Exception(apiResponse.message ?: apiResponse.error ?: "Error desconocido"))
+                    }
+                } else {
+                    Result.failure(Exception("Error al activar plan premium"))
+                }
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+    
     suspend fun createPaymentIntent(): Result<String> {
         return withContext(Dispatchers.IO) {
             try {

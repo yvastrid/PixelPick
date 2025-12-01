@@ -57,10 +57,9 @@ class BenefitsActivity : AppCompatActivity() {
             activateBasicPlan()
         }
         
-        // Botón para comprar plan premium
+        // Botón para comprar plan premium (sin pago, solo para testing)
         binding.purchaseButton.setOnClickListener {
-            // Navegar a checkout
-            startActivity(Intent(this, CheckoutActivity::class.java))
+            activatePremiumPlan()
         }
         
         binding.cancelButton.setOnClickListener {
@@ -86,6 +85,30 @@ class BenefitsActivity : AppCompatActivity() {
                 Toast.makeText(
                     this@BenefitsActivity,
                     "Error al activar plan básico: ${error.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+    
+    private fun activatePremiumPlan() {
+        lifecycleScope.launch {
+            val result = subscriptionRepository.activatePremiumPlan()
+            result.onSuccess {
+                Toast.makeText(
+                    this@BenefitsActivity,
+                    "¡Plan premium activado exitosamente!",
+                    Toast.LENGTH_LONG
+                ).show()
+                // Volver a MainActivity para ver los cambios
+                val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }.onFailure { error ->
+                Toast.makeText(
+                    this@BenefitsActivity,
+                    "Error al activar plan premium: ${error.message}",
                     Toast.LENGTH_LONG
                 ).show()
             }

@@ -1455,6 +1455,64 @@ def activate_basic_plan():
             'error': 'Error al activar plan básico'
         }), 500
 
+@app.route('/api/subscription/activate-premium', methods=['POST'])
+@login_required
+def activate_premium_plan():
+    """Activar el plan premium Pixelie Plan (sin pago, solo para testing)"""
+    try:
+        # Verificar si el usuario ya tiene una suscripción activa
+        existing_subscription = Subscription.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        
+        if existing_subscription:
+            # Si ya tiene una suscripción activa, actualizarla a premium
+            existing_subscription.plan_type = 'pixelie_plan'
+            existing_subscription.amount = 250.00  # Precio del plan premium
+            existing_subscription.currency = 'MXN'
+            existing_subscription.status = 'active'
+            existing_subscription.current_period_start = datetime.utcnow()
+            # El plan premium no expira por ahora (para testing)
+            existing_subscription.current_period_end = None
+        else:
+            # Crear nueva suscripción premium
+            premium_subscription = Subscription(
+                user_id=current_user.id,
+                plan_type='pixelie_plan',
+                amount=250.00,
+                currency='MXN',
+                status='active',
+                subscription_id=None,  # No hay ID de Stripe para testing
+                current_period_start=datetime.utcnow(),
+                current_period_end=None  # El plan premium no expira por ahora (para testing)
+            )
+            db.session.add(premium_subscription)
+        
+        db.session.commit()
+        
+        logger.info(f"Plan premium activado para usuario {current_user.id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Plan premium activado exitosamente',
+            'user': {
+                'subscription': {
+                    'plan_type': 'pixelie_plan',
+                    'status': 'active'
+                }
+            }
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al activar plan premium: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({
+            'success': False,
+            'error': f'Error al activar plan premium: {str(e)}'
+        }), 500
+
 @app.route('/api/create-payment-intent', methods=['POST'])
 @login_required
 def create_payment_intent():

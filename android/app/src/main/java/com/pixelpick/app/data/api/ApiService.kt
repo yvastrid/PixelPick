@@ -59,6 +59,9 @@ interface ApiService {
     @POST("/api/subscription/activate-basic")
     suspend fun activateBasicPlan(): Response<ApiResponse<Map<String, Any>>>
     
+    @POST("/api/subscription/activate-premium")
+    suspend fun activatePremiumPlan(): Response<ApiResponse<Map<String, Any>>>
+    
     @POST("/api/create-payment-intent")
     suspend fun createPaymentIntent(): Response<ApiResponse<PaymentIntentResponse>>
 }

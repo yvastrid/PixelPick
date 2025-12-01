@@ -66,11 +66,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Recargar estado de suscripción y aplicar restricciones
+        // Esto asegura que si el usuario cambió de plan, se actualicen las restricciones
         checkSubscriptionStatus()
-        // Recargar recomendaciones solo si es plan premium
-        if (isPremiumPlan) {
-            loadRecommendations()
-        }
     }
     
     private fun animateViews() {
