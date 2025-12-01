@@ -599,31 +599,30 @@ def get_profile():
         games_data = [ug.to_dict() for ug in user_games]
         
         # Estadísticas - contar solo juegos únicos con el estado más reciente
-        # Obtener todos los game_ids únicos del usuario
-        unique_game_ids = set()
-        game_status_map = {}  # game_id -> (status, last_played)
+        # Usar una consulta SQL más eficiente para obtener el estado más reciente de cada juego único
+        from sqlalchemy import func
         
-        # Recorrer todos los juegos y guardar el estado más reciente de cada uno
-        for ug in all_user_games:
-            if ug.game_id not in game_status_map:
-                # Primera vez que vemos este juego
-                game_status_map[ug.game_id] = (ug.status, ug.last_played)
-                unique_game_ids.add(ug.game_id)
-            else:
-                # Ya existe, comparar fechas y actualizar si es más reciente
-                existing_status, existing_date = game_status_map[ug.game_id]
-                if ug.last_played and existing_date and ug.last_played > existing_date:
-                    game_status_map[ug.game_id] = (ug.status, ug.last_played)
+        # Obtener el último registro de cada juego único (el más reciente)
+        subquery = db.session.query(
+            UserGame.game_id,
+            func.max(UserGame.last_played).label('max_date')
+        ).filter_by(user_id=user.id).group_by(UserGame.game_id).subquery()
+        
+        # Obtener los registros más recientes de cada juego único
+        latest_games = db.session.query(UserGame).join(
+            subquery,
+            (UserGame.game_id == subquery.c.game_id) & 
+            (UserGame.last_played == subquery.c.max_date)
+        ).filter_by(user_id=user.id).all()
         
         # Contar por estado
         completed_count = 0
         playing_count = 0
         
-        for game_id in unique_game_ids:
-            status, _ = game_status_map[game_id]
-            if status == 'completed':
+        for ug in latest_games:
+            if ug.status == 'completed':
                 completed_count += 1
-            elif status == 'playing':
+            elif ug.status == 'playing':
                 playing_count += 1
         
         return jsonify({
@@ -973,6 +972,44 @@ def add_user_game():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'Error al agregar juego: {str(e)}'}), 500
+
+@app.route('/api/profile/cleanup-duplicates', methods=['POST'])
+@login_required
+def cleanup_duplicate_games():
+    """Limpiar registros duplicados de juegos del usuario (endpoint temporal para debugging)"""
+    try:
+        user = current_user
+        
+        # Obtener todos los juegos del usuario
+        all_user_games = UserGame.query.filter_by(user_id=user.id).all()
+        
+        # Agrupar por game_id y mantener solo el más reciente
+        games_by_id = {}
+        for ug in all_user_games:
+            if ug.game_id not in games_by_id:
+                games_by_id[ug.game_id] = ug
+            else:
+                # Comparar fechas y mantener el más reciente
+                if ug.last_played and games_by_id[ug.game_id].last_played:
+                    if ug.last_played > games_by_id[ug.game_id].last_played:
+                        # Eliminar el antiguo
+                        db.session.delete(games_by_id[ug.game_id])
+                        games_by_id[ug.game_id] = ug
+                elif ug.last_played:
+                    # ug tiene fecha pero el otro no
+                    db.session.delete(games_by_id[ug.game_id])
+                    games_by_id[ug.game_id] = ug
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Se limpiaron duplicados. Total juegos únicos: {len(games_by_id)}'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Error al limpiar duplicados: {str(e)}'}), 500
 
 @app.route('/api/user/games/<int:game_id>/complete', methods=['POST'])
 @login_required
