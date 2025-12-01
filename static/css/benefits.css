@@ -1,3 +1,51 @@
+/* Membership Details Section */
+.membership-details-section {
+    margin-bottom: 60px;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.membership-details-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 30px 40px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.membership-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.membership-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.membership-plan-name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #00d4ff;
+    text-align: center;
+}
+
+.membership-status {
+    font-size: 16px;
+    color: #a0a0a0;
+    padding: 6px 16px;
+    background: rgba(0, 212, 255, 0.1);
+    border-radius: 20px;
+    text-align: center;
+}
+
 /* Logo Only */
 .logo-only {
     position: fixed;
@@ -449,7 +497,7 @@
     border-color: var(--accent-cyan);
     box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
     transform: translateY(-2px) scale(1.02);
-}
+    }
 
 .basic-button {
     border-color: rgba(0, 212, 255, 0.4);

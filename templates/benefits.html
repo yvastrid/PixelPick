@@ -23,9 +23,34 @@
             </p>
         </section>
 
+        <!-- Membership Details Section (only in view mode) -->
+        {% if mode == 'view' and has_subscription and subscription %}
+        <section class="membership-details-section">
+            <div class="membership-details-card">
+                <h2 class="membership-title">Detalles de la Membresía</h2>
+                <div class="membership-info">
+                    <div class="membership-plan-name" id="activePlanName">
+                        {% if subscription.plan_type == 'pixelie_plan' %}
+                            Pixelie Plan
+                        {% else %}
+                            Pixelie Basic Plan
+                        {% endif %}
+                    </div>
+                    <div class="membership-status" id="activePlanStatus">
+                        {% if subscription.status == 'active' %}
+                            Activo
+                        {% else %}
+                            {{ subscription.status|title }}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
         <!-- Plans Section -->
         <section class="plan-section" id="plan">
-            <div class="plans-container">
+            <div class="plans-container" id="plansContainer">
                 <!-- Pixelie Basic Plan -->
                 <div class="plan-card basic-plan">
                     <div class="plan-header">
@@ -64,9 +89,9 @@
                         </ul>
                     </div>
                     <div class="plan-footer">
-                        <a href="{{ url_for('login') }}" class="select-plan-button basic-button" id="selectBasicButton">
+                        <button class="select-plan-button basic-button" id="selectBasicButton">
                             <span class="button-text">Seleccionar Plan</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
 
@@ -126,10 +151,10 @@
                         </ul>
                     </div>
                     <div class="plan-footer">
-                        <a href="{{ url_for('login') }}" class="select-plan-button premium-button" id="purchaseButton">
+                        <button class="select-plan-button premium-button" id="purchaseButton">
                             <span class="button-text">Comprar Plan</span>
                             <span class="button-arrow">→</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -224,6 +249,8 @@
             </div>
         </section>
     </main>
+
+    <script src="{{ url_for('static', filename='js/benefits.js') }}"></script>
 </body>
 </html>
 

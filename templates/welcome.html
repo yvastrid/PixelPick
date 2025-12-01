@@ -25,11 +25,9 @@
             <img src="{{ url_for('static', filename='images/logo.png') }}" alt="PixelPick Logo" class="welcome-logo">
         </a>
         <div class="header-actions">
-            {% if not has_subscription %}
-            <a href="{{ url_for('checkout') }}" class="subscribe-button-header" id="subscribeButtonHeader">
+            <a href="{{ url_for('benefits') }}?mode=upgrade" class="subscribe-button-header" id="subscribeButtonHeader">
                 <span>Suscríbete ahora</span>
             </a>
-            {% endif %}
             <button class="header-icon search-icon" id="searchButton" aria-label="Buscar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/>
@@ -83,7 +81,7 @@
                     </svg>
                     <span>Configuración</span>
                 </a>
-                <a href="#" class="profile-menu-item">
+                <a href="{{ url_for('benefits') }}?mode=view" class="profile-menu-item">
                     <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
                         <line x1="1" y1="10" x2="23" y2="10"/>

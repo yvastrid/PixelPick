@@ -273,10 +273,28 @@ def index():
     return render_template('index.html')
 
 @app.route('/beneficios')
+@login_required
 def benefits():
-    # Guardar en sesión que el usuario quiere suscribirse
-    session['intent_to_subscribe'] = True
-    return render_template('benefits.html')
+    # Obtener el modo desde los parámetros de la URL (upgrade o view)
+    mode = request.args.get('mode', 'view')  # Por defecto 'view'
+    
+    # Verificar si el usuario tiene una suscripción activa
+    active_subscription = Subscription.query.filter_by(
+        user_id=current_user.id,
+        status='active'
+    ).first()
+    
+    subscription_data = None
+    if active_subscription:
+        subscription_data = {
+            'plan_type': active_subscription.plan_type,
+            'status': active_subscription.status
+        }
+    
+    return render_template('benefits.html', 
+                         mode=mode,
+                         has_subscription=active_subscription is not None,
+                         subscription=subscription_data)
 
 @app.route('/signin')
 def signin():
