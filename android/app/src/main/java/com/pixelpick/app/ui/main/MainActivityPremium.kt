@@ -333,7 +333,7 @@ class MainActivityPremium : AppCompatActivity() {
                     }
                     // Carrusel horizontal
                     val layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
-                        this@MainActivity,
+                        this@MainActivityPremium,
                         androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL,
                         false
                     )
@@ -357,7 +357,7 @@ class MainActivityPremium : AppCompatActivity() {
                     }
                     // Carrusel horizontal
                     val layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
-                        this@MainActivity,
+                        this@MainActivityPremium,
                         androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL,
                         false
                     )
