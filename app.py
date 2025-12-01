@@ -1391,7 +1391,28 @@ def get_subscription_status():
         
         subscription_data = None
         if active_subscription:
+            # Verificar si el periodo ha terminado y aplicar cambio automático
+            if active_subscription.cancel_at_period_end and active_subscription.current_period_end:
+                if datetime.utcnow() >= active_subscription.current_period_end:
+                    # El periodo terminó, cambiar a básico definitivamente
+                    active_subscription.plan_type = 'pixelie_basic'
+                    active_subscription.amount = 0.00
+                    active_subscription.current_period_end = None
+                    active_subscription.cancel_at_period_end = False
+                    db.session.commit()
+                    logger.info(f"Periodo terminado para usuario {current_user.id}, cambiado a básico automáticamente")
+            
             logger.info(f"Usuario {current_user.id} tiene suscripción activa: plan_type='{active_subscription.plan_type}', status='{active_subscription.status}'")
+            
+            # Determinar si tiene acceso premium (considerando periodo pagado)
+            has_premium_access = False
+            if active_subscription.plan_type == 'pixelie_plan':
+                has_premium_access = True
+            elif active_subscription.plan_type == 'pixelie_basic' and active_subscription.current_period_end:
+                # Si tiene periodo pagado activo aunque sea básico, tiene acceso premium
+                if datetime.utcnow() < active_subscription.current_period_end:
+                    has_premium_access = True
+            
             subscription_data = {
                 'id': active_subscription.id,
                 'user_id': active_subscription.user_id,
@@ -1401,7 +1422,8 @@ def get_subscription_status():
                 'status': active_subscription.status,
                 'current_period_start': active_subscription.current_period_start.isoformat() if active_subscription.current_period_start else None,
                 'current_period_end': active_subscription.current_period_end.isoformat() if active_subscription.current_period_end else None,
-                'cancel_at_period_end': active_subscription.cancel_at_period_end if active_subscription.cancel_at_period_end else False
+                'cancel_at_period_end': active_subscription.cancel_at_period_end if active_subscription.cancel_at_period_end else False,
+                'has_premium_access': has_premium_access  # Indica si tiene acceso premium (por plan o periodo pagado)
             }
             logger.info(f"Enviando subscription_data: {subscription_data}")
         

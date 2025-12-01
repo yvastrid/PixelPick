@@ -289,7 +289,10 @@ class BenefitsActivity : AppCompatActivity() {
                             applyUpgradeModeBasic()
                         } else if (isPremiumPlan && subscription.status == "active") {
                             // Tiene premium → mostrar básico como opción para cambiar
-                            applyUpgradeModePremiumForChange()
+                            // Verificar si hay periodo pagado activo para mostrar nota
+                            val hasPaidPeriod = subscription.currentPeriodEnd != null && 
+                                               subscription.cancelAtPeriodEnd == true
+                            applyUpgradeModePremiumForChange(hasPaidPeriod, subscription.currentPeriodEnd)
                         } else {
                             // Por defecto, mostrar premium
                             applyUpgradeModeBasic()
@@ -300,7 +303,10 @@ class BenefitsActivity : AppCompatActivity() {
                             applyBasicPlanSelectedState()
                         } else if (isPremiumPlan && subscription.status == "active") {
                             // Solo mostrar el plan premium, sin opción de cambiar
-                            applyPremiumPlanViewOnly()
+                            // Verificar si hay periodo pagado activo para mostrar nota
+                            val hasPaidPeriod = subscription.currentPeriodEnd != null && 
+                                               subscription.cancelAtPeriodEnd == true
+                            applyPremiumPlanViewOnly(hasPaidPeriod, subscription.currentPeriodEnd)
                         } else {
                             // Por defecto, básico
                             applyBasicPlanSelectedState()
@@ -352,7 +358,7 @@ class BenefitsActivity : AppCompatActivity() {
         binding.premiumPlanCard.visibility = View.GONE
     }
     
-    private fun applyUpgradeModePremiumForChange() {
+    private fun applyUpgradeModePremiumForChange(hasPaidPeriod: Boolean = false, periodEnd: String? = null) {
         // Modo upgrade cuando tiene plan premium: mostrar básico como opción para cambiar
         binding.basicPlanCard.visibility = View.VISIBLE
         binding.basicPlanCard.alpha = 1f
@@ -361,8 +367,23 @@ class BenefitsActivity : AppCompatActivity() {
         binding.selectBasicButton.isClickable = true
         binding.premiumPlanCard.visibility = View.GONE
         
-        // Ocultar nota de cambio de plan
-        binding.planChangeNote.visibility = View.GONE
+        // Mostrar nota si hay periodo pagado activo
+        if (hasPaidPeriod && periodEnd != null) {
+            try {
+                val periodEndDate = java.time.Instant.parse(periodEnd).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                val formattedDate = java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", java.util.Locale("es"))
+                val dateString = periodEndDate.format(formattedDate)
+                
+                binding.planChangeNote.visibility = View.VISIBLE
+                binding.planChangeNote.text = "Nota: Tienes acceso premium hasta el $dateString debido a tu periodo pagado. El cambio al plan básico se aplicará automáticamente después de esa fecha."
+            } catch (e: Exception) {
+                android.util.Log.e("BenefitsActivity", "Error al formatear fecha: ${e.message}")
+                binding.planChangeNote.visibility = View.VISIBLE
+                binding.planChangeNote.text = "Nota: Tienes acceso premium hasta que termine tu periodo pagado. El cambio al plan básico se aplicará automáticamente después de esa fecha."
+            }
+        } else {
+            binding.planChangeNote.visibility = View.GONE
+        }
     }
     
     private fun applyPremiumPlanSelectedState(hasPaidPeriod: Boolean = false) {

@@ -109,21 +109,30 @@ class SubscriptionRepository(
         }
     }
     
-    suspend fun activatePremiumPlan(): Result<Unit> {
+    suspend fun activatePremiumPlan(): Result<String> {
         return withContext(Dispatchers.IO) {
             try {
                 val response = apiService.activatePremiumPlan()
                 if (response.isSuccessful && response.body() != null) {
                     val apiResponse = response.body()!!
                     if (apiResponse.success) {
-                        Result.success(Unit)
+                        // Devolver el mensaje del backend
+                        val message = apiResponse.message ?: "Plan premium activado exitosamente"
+                        Result.success(message)
                     } else {
-                        Result.failure(Exception(apiResponse.message ?: apiResponse.error ?: "Error desconocido"))
+                        // Si hay error, devolver el mensaje de error
+                        val errorMessage = apiResponse.error ?: apiResponse.message ?: "Error desconocido"
+                        Result.failure(Exception(errorMessage))
                     }
                 } else {
-                    Result.failure(Exception("Error al activar plan premium"))
+                    // Intentar leer el cuerpo del error
+                    val errorBody = response.errorBody()?.string()
+                    android.util.Log.e("SubscriptionRepository", "Error response body: $errorBody")
+                    Result.failure(Exception(errorBody ?: "Error al activar plan premium"))
                 }
             } catch (e: Exception) {
+                android.util.Log.e("SubscriptionRepository", "Excepción al activar premium: ${e.message}")
+                e.printStackTrace()
                 Result.failure(e)
             }
         }
