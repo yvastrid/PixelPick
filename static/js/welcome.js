@@ -228,6 +228,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Cargar recomendaciones
     loadRecommendations();
+    
+    // Cargar catálogo
+    loadCatalog();
 });
 
 // Función para cargar datos del usuario
@@ -269,6 +272,52 @@ function loadRecommendations() {
         })
         .catch(error => {
             console.error('Error al cargar recomendaciones:', error);
+        });
+}
+
+// Función para cargar catálogo de juegos
+function loadCatalog() {
+    fetch('/api/games')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.games) {
+                // Filtrar solo los 5 juegos chistosos (gratuitos)
+                const funnyGameNames = ['Flootilupis', 'Chocopops', 'SnackAttack', 'CerealKiller', 'Munchies'];
+                const catalogGames = data.games.filter(game => 
+                    game.price === 0 && funnyGameNames.includes(game.name)
+                );
+                
+                const catalogGrid = document.querySelector('.catalog-grid');
+                if (catalogGrid && catalogGames.length > 0) {
+                    // Limpiar contenido estático
+                    catalogGrid.innerHTML = '';
+                    
+                    // Crear cards dinámicamente
+                    catalogGames.forEach(game => {
+                        const catalogItem = document.createElement('div');
+                        catalogItem.className = 'catalog-item';
+                        
+                        catalogItem.innerHTML = `
+                            <div class="catalog-image">
+                                <div class="catalog-placeholder">${game.name.charAt(0).toUpperCase()}</div>
+                            </div>
+                            <div class="catalog-info">
+                                <h3 class="catalog-item-title">${game.name}</h3>
+                                <p class="catalog-item-desc">${game.description || 'Sin descripción'}</p>
+                                <span class="catalog-free">FREE</span>
+                                <p style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.7);">
+                                    Disponible en la app Android
+                                </p>
+                            </div>
+                        `;
+                        
+                        catalogGrid.appendChild(catalogItem);
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error al cargar catálogo:', error);
         });
 }
 

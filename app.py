@@ -85,6 +85,14 @@ def init_db():
                     db.session.execute(text("ALTER TABLE users ADD COLUMN email_verification_sent_at TIMESTAMP"))
                     db.session.commit()
                     logger.info("Columna email_verification_sent_at agregada exitosamente")
+                
+                # Agregar columna game_url a la tabla games si no existe
+                game_columns = [col['name'] for col in inspector.get_columns('games')]
+                if 'game_url' not in game_columns:
+                    logger.info("Agregando columna game_url a la tabla games...")
+                    db.session.execute(text("ALTER TABLE games ADD COLUMN game_url VARCHAR(500)"))
+                    db.session.commit()
+                    logger.info("Columna game_url agregada exitosamente")
             except Exception as migration_error:
                 logger.warning(f"No se pudieron agregar las nuevas columnas (puede que ya existan): {str(migration_error)}")
                 db.session.rollback()
@@ -129,6 +137,84 @@ def init_db():
                     db.session.add(game)
                 db.session.commit()
                 logger.info("Juegos de ejemplo creados exitosamente")
+            
+            # Agregar juegos chistosos si no existen
+            funny_game_names = ['Flootilupis', 'Chocopops', 'SnackAttack', 'CerealKiller', 'Munchies']
+            existing_funny_games = {game.name for game in Game.query.filter(Game.name.in_(funny_game_names)).all()}
+            
+            funny_games_data = [
+                {
+                    'name': 'Flootilupis',
+                    'description': '¡Recolecta aritos de colores mientras esquivas obstáculos! Un juego adictivo inspirado en tu cereal favorito. ¿Podrás conseguir el puntaje más alto?',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Arcade',
+                    'game_url': 'flootilupis.html'
+                },
+                {
+                    'name': 'Chocopops',
+                    'description': 'Un juego dulce donde debes hacer estallar burbujas de chocolate antes de que se acabe el tiempo. ¡Cuidado con los niveles difíciles!',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Puzzle',
+                    'game_url': 'chocopops.html'
+                },
+                {
+                    'name': 'SnackAttack',
+                    'description': 'Defiende tu despensa de los snacks hambrientos que quieren devorarlo todo. ¡Usa tu estrategia para mantenerlos a raya!',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Tower Defense',
+                    'game_url': 'snackattack.html'
+                },
+                {
+                    'name': 'CerealKiller',
+                    'description': 'Un juego de acción rápida donde debes eliminar todos los cereales antes de que invadan tu tazón. ¡Apunta y dispara!',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Shooter',
+                    'game_url': 'cerealkiller.html'
+                },
+                {
+                    'name': 'Munchies',
+                    'description': 'Un juego relajante donde debes hacer coincidir snacks del mismo tipo. ¡Combina tres o más para ganar puntos y desbloquear niveles!',
+                    'price': 0.00,
+                    'platforms': 'Android',
+                    'category': 'Match-3',
+                    'game_url': 'munchies.html'
+                }
+            ]
+            
+            games_added = 0
+            for game_data in funny_games_data:
+                if game_data['name'] not in existing_funny_games:
+                    game = Game(
+                        name=game_data['name'],
+                        description=game_data['description'],
+                        price=game_data['price'],
+                        platforms=game_data['platforms'],
+                        category=game_data['category'],
+                        game_url=game_data['game_url']
+                    )
+                    db.session.add(game)
+                    games_added += 1
+                    logger.info(f"Agregando juego: {game_data['name']}")
+                else:
+                    # Actualizar game_url si el juego existe pero no tiene URL
+                    existing_game = Game.query.filter_by(name=game_data['name']).first()
+                    if existing_game and (not existing_game.game_url or existing_game.game_url.startswith('http')):
+                        existing_game.game_url = game_data['game_url']
+                        existing_game.platforms = game_data['platforms']
+                        existing_game.price = game_data['price']
+                        logger.info(f"Actualizando juego: {game_data['name']}")
+            
+            if games_added > 0:
+                db.session.commit()
+                logger.info(f"Se agregaron {games_added} juegos chistosos exitosamente")
+            else:
+                # Hacer commit de las actualizaciones si las hay
+                db.session.commit()
+                logger.info("Juegos chistosos ya existen, verificando actualizaciones")
     except Exception as e:
         logger.error(f"Error al inicializar base de datos: {str(e)}")
         logger.error(traceback.format_exc())

@@ -91,8 +91,9 @@ class Game(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), default=0.00)
-    platforms = db.Column(db.String(200))  # JSON string o comma-separated
+    platforms = db.Column(db.String(200))  # JSON string or comma-separated
     image_url = db.Column(db.String(500))
+    game_url = db.Column(db.String(500))  # URL del juego web para jugar
     category = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -108,6 +109,7 @@ class Game(db.Model):
             'price': float(self.price) if self.price else 0.0,
             'platforms': self.platforms.split(',') if self.platforms else [],
             'image_url': self.image_url,
+            'game_url': self.game_url,
             'category': self.category
         }
 
