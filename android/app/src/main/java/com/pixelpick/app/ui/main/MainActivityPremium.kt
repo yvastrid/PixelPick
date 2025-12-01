@@ -68,13 +68,15 @@ class MainActivityPremium : AppCompatActivity() {
     
     override fun onResume() {
         super.onResume()
-        // Recargar estado de suscripción y aplicar restricciones
-        // Esto asegura que si el usuario cambió de plan, se actualicen las restricciones
-        // Agregar un pequeño delay para asegurar que el backend haya procesado el cambio
-        lifecycleScope.launch {
-            kotlinx.coroutines.delay(300)  // Esperar 300ms para que el backend procese
-            checkSubscriptionStatus()
-        }
+        // En premium, siempre recargar recomendaciones y catálogo
+        loadRecommendations()
+        loadCatalog()
+    }
+    
+    private fun applyPremiumFeatures() {
+        // En premium, siempre mostrar recomendaciones IA y todos los juegos desbloqueados
+        binding.aiRecommendationsSection.visibility = View.VISIBLE
+        binding.exploreButton.visibility = View.VISIBLE
     }
     
     private fun animateViews() {
@@ -243,7 +245,7 @@ class MainActivityPremium : AppCompatActivity() {
             android.util.Log.d("MainActivity", "Clic en juego recomendado: ${game.name}")
         }
         binding.gamesRecyclerView.apply {
-            layoutManager = GridLayoutManager(this@MainActivity, 1)
+            layoutManager = GridLayoutManager(this@MainActivityPremium, 1)
             adapter = recommendationsAdapter
         }
     }
@@ -351,7 +353,7 @@ class MainActivityPremium : AppCompatActivity() {
                     binding.catalogRecyclerView.visibility = View.VISIBLE
                     binding.catalogEmptyStateLayout.visibility = View.GONE
                     val adapter = CatalogAdapter(fallbackGames) { game ->
-                        Toast.makeText(this@MainActivity, "Este juego no está disponible aún", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivityPremium, "Este juego no está disponible aún", Toast.LENGTH_SHORT).show()
                     }
                     // Carrusel horizontal
                     val layoutManager = androidx.recyclerview.widget.LinearLayoutManager(
@@ -430,7 +432,7 @@ class MainActivityPremium : AppCompatActivity() {
         lifecycleScope.launch {
             authRepository.logout()
             // Navegar a LoginActivity
-            val intent = Intent(this@MainActivity, com.pixelpick.app.ui.auth.LoginActivity::class.java)
+            val intent = Intent(this@MainActivityPremium, com.pixelpick.app.ui.auth.LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
