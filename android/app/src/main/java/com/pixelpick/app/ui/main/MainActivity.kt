@@ -170,9 +170,11 @@ class MainActivity : AppCompatActivity() {
         // Ocultar/mostrar sección de Recomendaciones IA según el plan
         if (isPremiumPlan) {
             binding.aiRecommendationsSection.visibility = View.VISIBLE
+            binding.exploreButton.visibility = View.VISIBLE  // Mostrar botón de explorar recomendaciones
             loadRecommendations()
         } else {
             binding.aiRecommendationsSection.visibility = View.GONE
+            binding.exploreButton.visibility = View.GONE  // Ocultar botón de explorar recomendaciones
         }
         
         // Recargar catálogo con restricciones aplicadas
