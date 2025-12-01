@@ -28,18 +28,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyVisualState(subscription) {
         if (mode === 'upgrade') {
             // Upgrade mode: show the opposite plan
-            if (subscription && subscription.plan_type === 'pixelie_basic' || !subscription) {
+            const planType = subscription ? subscription.plan_type : null;
+            if (!planType || planType.includes('basic')) {
                 // Has basic or no subscription -> show premium for upgrade
                 applyUpgradeModeBasic();
-            } else if (subscription && subscription.plan_type === 'pixelie_plan') {
+            } else if (planType === 'pixelie_plan' || planType.includes('pixelie_plan')) {
                 // Has premium -> show basic blocked
                 applyUpgradeModePremium();
             }
         } else {
             // View mode: show active plan
-            if (subscription && subscription.plan_type === 'pixelie_basic') {
+            const planType = subscription ? subscription.plan_type : null;
+            if (planType && planType.includes('basic')) {
                 applyBasicPlanSelectedState();
-            } else if (subscription && subscription.plan_type === 'pixelie_plan') {
+            } else if (planType === 'pixelie_plan' || planType.includes('pixelie_plan')) {
                 applyPremiumPlanSelectedState();
             }
         }
