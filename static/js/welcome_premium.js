@@ -226,11 +226,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos del usuario
     loadUserData();
     
-    // Cargar recomendaciones
+    // Cargar recomendaciones (siempre habilitado en premium)
     loadRecommendations();
     
-    // Cargar catálogo
+    // Cargar catálogo (todos los juegos desbloqueados en premium)
     loadCatalog();
+    
+    // En premium, siempre mostrar la sección de recomendaciones IA
+    const aiRecommendationsSection = document.querySelector('.ai-recommendations');
+    const exploreButton = document.querySelector('.cta-primary');
+    if (aiRecommendationsSection) {
+        aiRecommendationsSection.style.display = 'block';
+    }
+    if (exploreButton) {
+        exploreButton.style.display = 'flex';
+    }
 });
 
 // Función para cargar datos del usuario
@@ -300,19 +310,17 @@ function loadCatalog() {
                         const catalogItem = document.createElement('div');
                         catalogItem.className = 'catalog-item';
                         
-                            // En plan básico, solo el primer juego está desbloqueado
-                        const gameIndex = catalogGames.indexOf(game);
-                        const isLocked = gameIndex > 0;
-                        
                         catalogItem.innerHTML = `
-                            <div class="catalog-image" style="${isLocked ? 'opacity: 0.5; filter: blur(2px);' : ''}">
+                            <div class="catalog-image">
                                 <div class="catalog-placeholder">${game.name.charAt(0).toUpperCase()}</div>
                             </div>
-                            <div class="catalog-info" style="${isLocked ? 'opacity: 0.5;' : ''}">
+                            <div class="catalog-info">
                                 <h3 class="catalog-item-title">${game.name}</h3>
                                 <p class="catalog-item-desc">${game.description || 'Sin descripción'}</p>
                                 <span class="catalog-free">FREE</span>
-                                ${isLocked ? '<p style="margin-top: 10px; font-size: 12px; color: #ff6b6b;">Actualiza a Premium para desbloquear</p>' : '<p style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.7);">Disponible en la app Android</p>'}
+                                <p style="margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.7);">
+                                    Disponible en la app Android
+                                </p>
                             </div>
                         `;
                         

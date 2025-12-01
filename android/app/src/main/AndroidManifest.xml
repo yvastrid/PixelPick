@@ -33,6 +33,11 @@
             android:theme="@style/Theme.PixelPick" />
         
         <activity
+            android:name=".ui.main.MainActivityPremium"
+            android:exported="false"
+            android:theme="@style/Theme.PixelPick" />
+        
+        <activity
             android:name=".ui.auth.LoginActivity"
             android:exported="false"
             android:theme="@style/Theme.PixelPick" />

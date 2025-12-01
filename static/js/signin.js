@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         window.location.href = '/checkout';
                     } else {
                         // Login exitoso, redirigir a welcome
-                        window.location.href = '/welcome';
+            window.location.href = '/welcome';
                     }
                 } else {
                     alert(data.error || 'Error al iniciar sesión');

@@ -321,9 +321,15 @@ def welcome():
         status='active'
     ).first()
     
-    has_subscription = active_subscription is not None
+    # Determinar qué interfaz mostrar según el plan
+    if active_subscription:
+        plan_type = active_subscription.plan_type or ''
+        # Si tiene plan premium, redirigir a la interfaz premium
+        if plan_type == 'pixelie_plan' or ('pixelie' in plan_type.lower() and 'basic' not in plan_type.lower()):
+            return render_template('welcome_premium.html')
     
-    return render_template('welcome.html', has_subscription=has_subscription)
+    # Por defecto, mostrar interfaz básica
+    return render_template('welcome.html')
 
 @app.route('/profile')
 @login_required

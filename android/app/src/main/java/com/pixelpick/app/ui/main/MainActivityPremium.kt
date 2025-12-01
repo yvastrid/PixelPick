@@ -35,7 +35,7 @@ import com.pixelpick.app.util.SessionManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 
-class MainActivity : AppCompatActivity() {
+class MainActivityPremium : AppCompatActivity() {
     
     private lateinit var binding: ActivityMainBinding
     private lateinit var sessionManager: SessionManager
@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var subscriptionRepository: SubscriptionRepository
     private var profilePopupWindow: PopupWindow? = null
     private lateinit var recommendationsAdapter: RecommendationsAdapter
-    private var isPremiumPlan: Boolean = false  // true si tiene plan premium, false si tiene básico
+    private var isPremiumPlan: Boolean = true  // Siempre premium en esta Activity
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,9 +60,10 @@ class MainActivity : AppCompatActivity() {
         setupRecommendationsRecyclerView()
         animateViews()
         loadUserData()
-        // Verificar estado de suscripción primero, luego cargar contenido según el plan
-        checkSubscriptionStatus()
-        // loadRecommendations() y loadCatalog() se llamarán desde applyPlanRestrictions()
+        // En premium, siempre mostrar todo desbloqueado
+        applyPremiumFeatures()
+        loadRecommendations()
+        loadCatalog()
     }
     
     override fun onResume() {
@@ -174,19 +175,9 @@ class MainActivity : AppCompatActivity() {
                     isPremiumPlan = false
                 }
                 
-                    android.util.Log.d("MainActivity", "=== FIN VERIFICACIÓN. isPremiumPlan final: $isPremiumPlan ===")
+                android.util.Log.d("MainActivity", "=== FIN VERIFICACIÓN. isPremiumPlan final: $isPremiumPlan ===")
                 
-                // Si es premium, redirigir a MainActivityPremium
-                if (isPremiumPlan) {
-                    android.util.Log.d("MainActivity", "Plan premium detectado, redirigiendo a MainActivityPremium")
-                    val intent = Intent(this@MainActivity, MainActivityPremium::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
-                    return@onSuccess
-                }
-                
-                // Aplicar restricciones según el plan (solo para básico)
+                // Aplicar restricciones según el plan
                 applyPlanRestrictions()
             }.onFailure { error ->
                 // En caso de error, asumir plan básico
@@ -397,25 +388,14 @@ class MainActivity : AppCompatActivity() {
                     android.util.Log.d("MainActivity", "✅ Mostrando ${catalogGames.size} juegos en el catálogo")
                     binding.catalogRecyclerView.visibility = View.VISIBLE
                     binding.catalogEmptyStateLayout.visibility = View.GONE
-                    android.util.Log.d("MainActivity", "Creando CatalogAdapter con isPremiumPlan: $isPremiumPlan")
-                    val adapter = CatalogAdapter(catalogGames, isPremiumPlan) { game ->
-                        val gameIndex = catalogGames.indexOfFirst { it.id == game.id }
-                        android.util.Log.d("MainActivity", "Click en juego: ${game.name}, índice: $gameIndex, isPremiumPlan: $isPremiumPlan")
-                        
-                        if (!isPremiumPlan && gameIndex > 0) {
-                            // Plan básico: solo el primer juego (índice 0) está desbloqueado
-                            Toast.makeText(this@MainActivity, "Actualiza a Premium para desbloquear este juego", Toast.LENGTH_LONG).show()
-                            val intent = Intent(this@MainActivity, BenefitsActivity::class.java)
-                            intent.putExtra("mode", "upgrade")
-                            startActivity(intent)
-                        } else {
-                            // Plan premium o primer juego: abrir el juego
-                            val intent = Intent(this@MainActivity, GameActivity::class.java)
-                            intent.putExtra("game_url", game.gameUrl)
-                            intent.putExtra("game_id", game.id)
-                            intent.putExtra("game_name", game.name)
-                            startActivity(intent)
-                        }
+                    android.util.Log.d("MainActivityPremium", "Creando CatalogAdapter con isPremiumPlan: true (siempre premium)")
+                    val adapter = CatalogAdapter(catalogGames, true) { game ->
+                        // En premium, todos los juegos están desbloqueados
+                        val intent = Intent(this@MainActivityPremium, GameActivity::class.java)
+                        intent.putExtra("game_url", game.gameUrl)
+                        intent.putExtra("game_id", game.id)
+                        intent.putExtra("game_name", game.name)
+                        startActivity(intent)
                     }
                     // Carrusel horizontal
                     val layoutManager = androidx.recyclerview.widget.LinearLayoutManager(

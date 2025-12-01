@@ -116,12 +116,28 @@ class BenefitsActivity : AppCompatActivity() {
                         android.util.Log.d("BenefitsActivity", "Plan type verificado: '$planType'")
                     }
                     
-                    // Volver a MainActivity para ver los cambios
-                    // Usar FLAG_ACTIVITY_CLEAR_TASK para asegurar que MainActivity se recree completamente
-                    val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
+                    // Verificar el plan después de activar premium
+                    val verifyResult = subscriptionRepository.getSubscriptionStatus()
+                    verifyResult.onSuccess { statusResponse ->
+                        val isPremium = statusResponse.hasSubscription && 
+                                       statusResponse.subscription?.planType?.equals("pixelie_plan", ignoreCase = true) == true
+                        
+                        // Redirigir a la Activity correspondiente según el plan
+                        val intent = if (isPremium) {
+                            Intent(this@BenefitsActivity, com.pixelpick.app.ui.main.MainActivityPremium::class.java)
+                        } else {
+                            Intent(this@BenefitsActivity, MainActivity::class.java)
+                        }
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    }.onFailure {
+                        // En caso de error, ir a MainActivity básico
+                        val intent = Intent(this@BenefitsActivity, MainActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    }
                 }.onFailure { error ->
                     android.util.Log.e("BenefitsActivity", "Error al verificar estado: ${error.message}")
                     // Aún así, volver a MainActivity
