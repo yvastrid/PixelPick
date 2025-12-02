@@ -90,7 +90,7 @@
             android:layout_height="280dp"
             android:layout_gravity="center"
             android:src="@drawable/logo"
-            android:alpha="0.3f"
+            android:alpha="0.3"
             android:scaleType="fitCenter"
             android:background="@drawable/glow_effect" />
 
@@ -114,7 +114,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="80dp"
         android:background="@drawable/glow_circle"
-        android:alpha="0.2f" />
+        android:alpha="0.2" />
 
     <View
         android:id="@+id/glowEffect2"
@@ -125,7 +125,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="100dp"
         android:background="@drawable/glow_circle"
-        android:alpha="0.15f" />
+        android:alpha="0.15" />
 
 </RelativeLayout>
 
