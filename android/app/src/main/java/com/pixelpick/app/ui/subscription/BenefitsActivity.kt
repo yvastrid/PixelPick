@@ -387,8 +387,11 @@ class BenefitsActivity : AppCompatActivity() {
         binding.purchaseButton.isEnabled = true
         binding.purchaseButton.isClickable = true
         
-        // Ocultar nota
+        // Ocultar nota y detalles de membresía para nuevo usuario
         binding.planChangeNote.visibility = View.GONE
+        // Ocultar la sección de detalles de membresía
+        val membershipCard = binding.root.findViewById<View>(R.id.membershipDetailsCard)
+        membershipCard?.visibility = View.GONE
     }
     
     private fun applyUpgradeModeBasic() {
