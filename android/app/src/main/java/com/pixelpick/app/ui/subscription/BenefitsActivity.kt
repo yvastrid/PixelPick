@@ -246,7 +246,13 @@ class BenefitsActivity : AppCompatActivity() {
                                      planType.contains("basic", ignoreCase = true)
                     
                     // El plan premium tiene plan_type='pixelie_plan' exactamente
-                    val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true)
+                    // O tiene acceso premium por periodo pagado activo
+                    val hasPremiumAccess = subscription.hasPremiumAccess == true
+                    val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
+                    
+                    android.util.Log.d("BenefitsActivity", "hasPremiumAccess: $hasPremiumAccess")
+                    android.util.Log.d("BenefitsActivity", "currentPeriodEnd: ${subscription.currentPeriodEnd}")
+                    android.util.Log.d("BenefitsActivity", "cancelAtPeriodEnd: ${subscription.cancelAtPeriodEnd}")
                     
                     android.util.Log.d("BenefitsActivity", "✅ isBasicPlan: $isBasicPlan")
                     android.util.Log.d("BenefitsActivity", "✅ isPremiumPlan: $isPremiumPlan")
@@ -343,6 +349,9 @@ class BenefitsActivity : AppCompatActivity() {
         binding.premiumPlanCard.alpha = 1f
         binding.purchaseButton.isEnabled = true
         binding.purchaseButton.isClickable = true
+        
+        // Ocultar nota
+        binding.planChangeNote.visibility = View.GONE
     }
     
     private fun applyUpgradeModePremium() {
