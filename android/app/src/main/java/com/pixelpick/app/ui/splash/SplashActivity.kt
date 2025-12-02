@@ -174,7 +174,7 @@ class SplashActivity : AppCompatActivity() {
                     .setInterpolator(android.view.animation.OvershootInterpolator())
                     .withEndAction {
                         // Animación flotante continua
-                        startFloatingAnimation(particle, 1000f + (index * 200f), 1500f + (index * 300f))
+                        startFloatingAnimation(particle, 1000f + (index * 200f), (1500L + (index * 300L)))
                         
                         // Efecto de parpadeo sutil
                         startTwinkleAnimation(particle)
