@@ -1407,11 +1407,14 @@ def get_subscription_status():
             # Determinar si tiene acceso premium (considerando periodo pagado)
             has_premium_access = False
             if active_subscription.plan_type == 'pixelie_plan':
+                # Plan premium activo
                 has_premium_access = True
             elif active_subscription.plan_type == 'pixelie_basic' and active_subscription.current_period_end:
                 # Si tiene periodo pagado activo aunque sea básico, tiene acceso premium
+                # Esto ocurre cuando cambió a básico pero aún tiene periodo pagado activo
                 if datetime.utcnow() < active_subscription.current_period_end:
                     has_premium_access = True
+                    logger.info(f"Usuario {current_user.id} tiene acceso premium por periodo pagado activo hasta {active_subscription.current_period_end}")
             
             subscription_data = {
                 'id': active_subscription.id,

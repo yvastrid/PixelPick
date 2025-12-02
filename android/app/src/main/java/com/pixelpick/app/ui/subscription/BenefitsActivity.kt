@@ -259,9 +259,16 @@ class BenefitsActivity : AppCompatActivity() {
                     val hasPremiumAccess = subscription.hasPremiumAccess == true
                     val isPremiumPlan = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
                     
+                    // Verificar si tiene periodo pagado activo (aunque plan_type sea básico)
+                    // Esto ocurre cuando cambió a básico pero aún tiene periodo pagado activo
+                    val hasPaidPeriodActive = hasPremiumAccess && isBasicPlan && 
+                                             subscription.currentPeriodEnd != null &&
+                                             subscription.cancelAtPeriodEnd == true
+                    
                     android.util.Log.d("BenefitsActivity", "hasPremiumAccess: $hasPremiumAccess")
                     android.util.Log.d("BenefitsActivity", "currentPeriodEnd: ${subscription.currentPeriodEnd}")
                     android.util.Log.d("BenefitsActivity", "cancelAtPeriodEnd: ${subscription.cancelAtPeriodEnd}")
+                    android.util.Log.d("BenefitsActivity", "hasPaidPeriodActive: $hasPaidPeriodActive")
                     
                     android.util.Log.d("BenefitsActivity", "✅ isBasicPlan: $isBasicPlan")
                     android.util.Log.d("BenefitsActivity", "✅ isPremiumPlan: $isPremiumPlan")
@@ -296,8 +303,12 @@ class BenefitsActivity : AppCompatActivity() {
                     // Aplicar lógica según el modo
                     if (mode == "upgrade") {
                         // Modo "Suscríbete ahora": mostrar el plan opuesto para cambiar
-                        if (isBasicPlan && subscription.status == "active") {
-                            // Tiene básico → mostrar premium para upgrade
+                        if (hasPaidPeriodActive) {
+                            // Tiene periodo pagado activo (cambió a básico pero aún tiene premium activo)
+                            // Bloquear suscripción premium y mostrar nota
+                            applyUpgradeModeBasicBlocked(hasPaidPeriodActive, subscription.currentPeriodEnd)
+                        } else if (isBasicPlan && subscription.status == "active") {
+                            // Tiene básico sin periodo pagado → mostrar premium para upgrade
                             applyUpgradeModeBasic()
                         } else if (isPremiumPlan && subscription.status == "active") {
                             // Tiene premium → mostrar básico como opción para cambiar
@@ -311,7 +322,11 @@ class BenefitsActivity : AppCompatActivity() {
                         }
                     } else {
                         // Modo "view" (desde menú de perfil): mostrar solo plan activo (sin opción de cambiar)
-                        if (isBasicPlan && subscription.status == "active") {
+                        if (hasPaidPeriodActive) {
+                            // Tiene periodo pagado activo pero plan_type es básico
+                            // Mostrar como premium con nota informativa
+                            applyPremiumPlanViewOnly(true, subscription.currentPeriodEnd)
+                        } else if (isBasicPlan && subscription.status == "active") {
                             applyBasicPlanSelectedState()
                         } else if (isPremiumPlan && subscription.status == "active") {
                             // Solo mostrar el plan premium, sin opción de cambiar
