@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.pixelpick.app.R
@@ -98,7 +99,7 @@ class SplashActivity : AppCompatActivity() {
                 .setStartDelay(300)
                 .setInterpolator(android.view.animation.DecelerateInterpolator())
                 .withEndAction {
-                    startFloatingAnimation(it, 2000f, 1500f)
+                    startFloatingAnimation(it, 2000f, 1500L)
                 }
                 .start()
         }
@@ -116,7 +117,7 @@ class SplashActivity : AppCompatActivity() {
                 .setStartDelay(500)
                 .setInterpolator(android.view.animation.DecelerateInterpolator())
                 .withEndAction {
-                    startFloatingAnimation(it, 1800f, 2000f)
+                    startFloatingAnimation(it, 1800f, 2000L)
                 }
                 .start()
         }
