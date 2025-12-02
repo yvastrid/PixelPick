@@ -373,6 +373,24 @@ class BenefitsActivity : AppCompatActivity() {
         }
     }
     
+    private fun applyNewUserMode() {
+        // Modo new_user: mostrar ambos planes para que el usuario elija
+        binding.basicPlanCard.visibility = View.VISIBLE
+        binding.basicPlanCard.alpha = 1f
+        binding.selectBasicButton.text = "Seleccionar Plan"
+        binding.selectBasicButton.isEnabled = true
+        binding.selectBasicButton.isClickable = true
+        
+        binding.premiumPlanCard.visibility = View.VISIBLE
+        binding.premiumPlanCard.alpha = 1f
+        binding.purchaseButton.text = "Comprar Plan"
+        binding.purchaseButton.isEnabled = true
+        binding.purchaseButton.isClickable = true
+        
+        // Ocultar nota
+        binding.planChangeNote.visibility = View.GONE
+    }
+    
     private fun applyUpgradeModeBasic() {
         // Modo upgrade cuando tiene plan básico: mostrar solo premium para upgrade
         binding.basicPlanCard.visibility = View.GONE
