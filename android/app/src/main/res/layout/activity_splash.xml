@@ -4,49 +4,128 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient">
 
-    <!-- Logo Container -->
-    <LinearLayout
+    <!-- Partículas decorativas flotantes -->
+    <TextView
+        android:id="@+id/particle1"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:text="▢"
+        android:textColor="#3300D4FF"
+        android:textSize="16sp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="150dp"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/particle2"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:text="▢"
+        android:textColor="#3300F5FF"
+        android:textSize="12sp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="80dp"
+        android:layout_marginTop="200dp"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/particle3"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:text="▢"
+        android:textColor="#3300FF88"
+        android:textSize="14sp"
+        android:layout_marginStart="100dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="250dp"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/particle4"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:text="▢"
+        android:textColor="#3300D4FF"
+        android:textSize="10sp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="120dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="180dp"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/particle5"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:text="▢"
+        android:textColor="#3300F5FF"
+        android:textSize="18sp"
+        android:layout_marginStart="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="320dp"
+        android:gravity="center" />
+
+    <TextView
+        android:id="@+id/particle6"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:text="▢"
+        android:textColor="#3300FF88"
+        android:textSize="12sp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="40dp"
+        android:layout_marginTop="100dp"
+        android:gravity="center" />
+
+    <!-- Logo Container con efecto de glow -->
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:layout_centerInParent="true">
 
+        <!-- Efecto de glow/brillo detrás del logo -->
+        <ImageView
+            android:id="@+id/logoGlow"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:layout_gravity="center"
+            android:src="@drawable/logo"
+            android:alpha="0.3f"
+            android:scaleType="fitCenter"
+            android:background="@drawable/glow_effect" />
+
+        <!-- Logo principal -->
         <ImageView
             android:id="@+id/logo"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
+            android:layout_width="240dp"
+            android:layout_height="240dp"
+            android:layout_gravity="center"
             android:src="@drawable/logo"
             android:contentDescription="@string/app_name"
             android:scaleType="fitCenter" />
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="16dp">
+    </FrameLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/app_name"
-                android:textColor="@color/text_primary"
-                android:textSize="36sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.05" />
+    <!-- Efectos de brillo decorativos -->
+    <View
+        android:id="@+id/glowEffect1"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="80dp"
+        android:background="@drawable/glow_circle"
+        android:alpha="0.2f" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="✦"
-                android:textColor="@color/primary_blue"
-                android:textSize="28sp"
-                android:layout_marginStart="8dp" />
-
-        </LinearLayout>
-
-    </LinearLayout>
+    <View
+        android:id="@+id/glowEffect2"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="30dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="100dp"
+        android:background="@drawable/glow_circle"
+        android:alpha="0.15f" />
 
 </RelativeLayout>
 
