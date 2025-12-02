@@ -171,54 +171,63 @@ class BenefitsActivity : AppCompatActivity() {
                         Toast.LENGTH_LONG
                     ).show()
                 
-                // Esperar un momento para que el mensaje se muestre y el backend procese
-                kotlinx.coroutines.delay(1500)  // Aumentar delay para asegurar que el backend procese
-                
-                // Verificar que el cambio se haya guardado antes de volver
-                android.util.Log.d("BenefitsActivity", "Verificando estado actualizado después de activar premium...")
-                val verifyResult = subscriptionRepository.getSubscriptionStatus()
-                verifyResult.onSuccess { statusResponse ->
-                    android.util.Log.d("BenefitsActivity", "Estado verificado: hasSubscription=${statusResponse.hasSubscription}")
+                    // Esperar un momento para que el mensaje se muestre y el backend procese
+                    kotlinx.coroutines.delay(1500)  // Aumentar delay para asegurar que el backend procese
                     
-                    val planType = statusResponse.subscription?.planType ?: ""
-                    val status = statusResponse.subscription?.status ?: ""
-                    android.util.Log.d("BenefitsActivity", "Plan type verificado: '$planType'")
-                    android.util.Log.d("BenefitsActivity", "Status verificado: '$status'")
-                    
-                    // Verificar si es plan premium (considerar acceso premium por periodo pagado)
-                    val hasPremiumAccess = statusResponse.subscription?.hasPremiumAccess == true
-                    val isPremium = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
-                    
-                    android.util.Log.d("BenefitsActivity", "hasPremiumAccess: $hasPremiumAccess")
-                    android.util.Log.d("BenefitsActivity", "isPremium determinado: $isPremium")
-                    
-                    // Redirigir a la Activity correspondiente según el plan
-                    val intent = if (isPremium && statusResponse.hasSubscription) {
-                        android.util.Log.d("BenefitsActivity", "✅ Redirigiendo a MainActivityPremium")
-                        Intent(this@BenefitsActivity, com.pixelpick.app.ui.main.MainActivityPremium::class.java)
-                    } else {
-                        android.util.Log.d("BenefitsActivity", "❌ Redirigiendo a MainActivity (básico)")
-                        Intent(this@BenefitsActivity, MainActivity::class.java)
+                    // Verificar que el cambio se haya guardado antes de volver
+                    android.util.Log.d("BenefitsActivity", "Verificando estado actualizado después de activar premium...")
+                    val verifyResult = subscriptionRepository.getSubscriptionStatus()
+                    verifyResult.onSuccess { statusResponse ->
+                        android.util.Log.d("BenefitsActivity", "Estado verificado: hasSubscription=${statusResponse.hasSubscription}")
+                        
+                        val planType = statusResponse.subscription?.planType ?: ""
+                        val status = statusResponse.subscription?.status ?: ""
+                        android.util.Log.d("BenefitsActivity", "Plan type verificado: '$planType'")
+                        android.util.Log.d("BenefitsActivity", "Status verificado: '$status'")
+                        
+                        // Verificar si es plan premium (considerar acceso premium por periodo pagado)
+                        val hasPremiumAccess = statusResponse.subscription?.hasPremiumAccess == true
+                        val isPremium = planType.equals("pixelie_plan", ignoreCase = true) || hasPremiumAccess
+                        
+                        android.util.Log.d("BenefitsActivity", "hasPremiumAccess: $hasPremiumAccess")
+                        android.util.Log.d("BenefitsActivity", "isPremium determinado: $isPremium")
+                        
+                        // Redirigir a la Activity correspondiente según el plan
+                        val intent = if (isPremium && statusResponse.hasSubscription) {
+                            android.util.Log.d("BenefitsActivity", "✅ Redirigiendo a MainActivityPremium")
+                            Intent(this@BenefitsActivity, com.pixelpick.app.ui.main.MainActivityPremium::class.java)
+                        } else {
+                            android.util.Log.d("BenefitsActivity", "❌ Redirigiendo a MainActivity (básico)")
+                            Intent(this@BenefitsActivity, MainActivity::class.java)
+                        }
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+                    }.onFailure { error ->
+                        android.util.Log.e("BenefitsActivity", "❌ Error al verificar estado: ${error.message}")
+                        error.printStackTrace()
+                        // Aún así, intentar redirigir a premium (asumir que se activó correctamente)
+                        android.util.Log.d("BenefitsActivity", "Asumiendo que el plan se activó correctamente, redirigiendo a premium")
+                        val intent = Intent(this@BenefitsActivity, com.pixelpick.app.ui.main.MainActivityPremium::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
                     }
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
                 }.onFailure { error ->
-                    android.util.Log.e("BenefitsActivity", "❌ Error al verificar estado: ${error.message}")
+                    android.util.Log.e("BenefitsActivity", "❌ Error al activar plan premium: ${error.message}")
                     error.printStackTrace()
-                    // Aún así, intentar redirigir a premium (asumir que se activó correctamente)
-                    android.util.Log.d("BenefitsActivity", "Asumiendo que el plan se activó correctamente, redirigiendo a premium")
-                    val intent = Intent(this@BenefitsActivity, com.pixelpick.app.ui.main.MainActivityPremium::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
+                    Toast.makeText(
+                        this@BenefitsActivity,
+                        "Error al activar plan premium: ${error.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }.onFailure { error ->
-                android.util.Log.e("BenefitsActivity", "❌ Error al activar plan premium: ${error.message}")
+                android.util.Log.e("BenefitsActivity", "❌ Error al verificar periodo pagado: ${error.message}")
                 error.printStackTrace()
                 Toast.makeText(
                     this@BenefitsActivity,
-                    "Error al activar plan premium: ${error.message}",
+                    "Error al verificar periodo pagado: ${error.message}",
                     Toast.LENGTH_LONG
                 ).show()
             }
