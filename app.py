@@ -1561,7 +1561,7 @@ def activate_premium_plan():
             
             # Si ya tiene una suscripción activa, actualizarla a premium
             existing_subscription.plan_type = 'pixelie_plan'
-            existing_subscription.amount = 250.00  # Precio del plan premium
+            existing_subscription.amount = 100.00  # Precio del plan premium
             existing_subscription.currency = 'MXN'
             existing_subscription.status = 'active'
             existing_subscription.current_period_start = datetime.utcnow()
@@ -1573,7 +1573,7 @@ def activate_premium_plan():
             premium_subscription = Subscription(
                 user_id=current_user.id,
                 plan_type='pixelie_plan',
-                amount=250.00,
+                amount=100.00,
                 currency='MXN',
                 status='active',
                 subscription_id=None,  # No hay ID de Stripe para testing

@@ -274,7 +274,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Recomendaciones Básicas"
+                                android:text="Acceso a 1 juego del catálogo"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:layout_marginStart="16dp" />
@@ -301,7 +301,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Acceso Limitado al Panel"
+                                android:text="Panel de perfil básico"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:layout_marginStart="16dp" />
@@ -327,7 +327,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Catálogo de Juegos"
+                                android:text="Seguimiento de juegos jugados"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:layout_marginStart="16dp" />
@@ -478,7 +478,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Recomendaciones Ilimitadas"
+                                android:text="Acceso a todos los juegos del catálogo"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:layout_marginStart="16dp" />
@@ -505,7 +505,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Acceso a tu Panel de Miembro"
+                                android:text="Recomendaciones IA personalizadas"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:layout_marginStart="16dp" />
@@ -532,61 +532,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Juegos Listos para Jugar"
-                                android:textColor="@color/text_primary"
-                                android:textSize="18sp"
-                                android:layout_marginStart="16dp" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="20dp">
-
-                            <TextView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:text="✓"
-                                android:textColor="@color/accent_green"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:gravity="center" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Revisiones Rápidas"
-                                android:textColor="@color/text_primary"
-                                android:textSize="18sp"
-                                android:layout_marginStart="16dp" />
-
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:layout_marginBottom="20dp">
-
-                            <TextView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:text="✓"
-                                android:textColor="@color/accent_green"
-                                android:textSize="18sp"
-                                android:textStyle="bold"
-                                android:gravity="center" />
-
-                            <TextView
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:text="Soporte de IA Siempre Activo"
+                                android:text="Panel de perfil completo"
                                 android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:layout_marginStart="16dp" />
@@ -612,7 +558,7 @@
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Recomendaciones Consistentes y Personalizadas"
+                                android:text="Estadísticas de juegos completados"
                         android:textColor="@color/text_primary"
                                 android:textSize="18sp"
                                 android:layout_marginStart="16dp" />
