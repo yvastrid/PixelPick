@@ -378,6 +378,35 @@ class BenefitsActivity : AppCompatActivity() {
         binding.planChangeNote.visibility = View.GONE
     }
     
+    private fun applyUpgradeModeBasicBlocked(hasPaidPeriod: Boolean, periodEnd: String?) {
+        // Modo upgrade cuando tiene periodo pagado activo: bloquear suscripción premium
+        binding.basicPlanCard.visibility = View.GONE
+        binding.premiumPlanCard.visibility = View.VISIBLE
+        binding.premiumPlanCard.alpha = 0.6f // Difuminar para indicar bloqueado
+        binding.purchaseButton.isEnabled = false
+        binding.purchaseButton.isClickable = false
+        binding.purchaseButton.text = "No disponible"
+        
+        // Mostrar nota informativa sobre periodo pagado activo
+        if (hasPaidPeriod && periodEnd != null) {
+            try {
+                val periodEndDate = java.time.Instant.parse(periodEnd).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime()
+                val formattedDate = java.time.format.DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy", java.util.Locale("es"))
+                val dateString = periodEndDate.format(formattedDate)
+                
+                binding.planChangeNote.visibility = View.VISIBLE
+                binding.planChangeNote.text = "Nota: Ya tienes un periodo pagado activo hasta el $dateString. No puedes volver a suscribirte al plan premium hasta que termine tu periodo actual."
+            } catch (e: Exception) {
+                android.util.Log.e("BenefitsActivity", "Error al formatear fecha: ${e.message}")
+                binding.planChangeNote.visibility = View.VISIBLE
+                binding.planChangeNote.text = "Nota: Ya tienes un periodo pagado activo. No puedes volver a suscribirte al plan premium hasta que termine tu periodo actual."
+            }
+        } else {
+            binding.planChangeNote.visibility = View.VISIBLE
+            binding.planChangeNote.text = "Nota: Ya tienes un periodo pagado activo. No puedes volver a suscribirte al plan premium hasta que termine tu periodo actual."
+        }
+    }
+    
     private fun applyUpgradeModePremium() {
         // Modo upgrade cuando tiene plan premium: mostrar básico difuminado (no puede downgrade)
         binding.basicPlanCard.visibility = View.VISIBLE
