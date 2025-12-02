@@ -11,6 +11,7 @@ import com.pixelpick.app.data.models.RegisterRequest
 import com.pixelpick.app.data.repository.AuthRepository
 import com.pixelpick.app.databinding.ActivityRegisterBinding
 import com.pixelpick.app.ui.main.MainActivity
+import com.pixelpick.app.ui.subscription.BenefitsActivity
 import com.pixelpick.app.util.SessionManager
 import kotlinx.coroutines.launch
 
@@ -105,7 +106,11 @@ class RegisterActivity : AppCompatActivity() {
                 
                 result.onSuccess { response ->
                     Toast.makeText(this@RegisterActivity, R.string.success_register, Toast.LENGTH_SHORT).show()
-                    startActivity(Intent(this@RegisterActivity, MainActivity::class.java))
+                    // Redirigir a la pantalla de planes para que el usuario elija su plan
+                    val intent = Intent(this@RegisterActivity, BenefitsActivity::class.java)
+                    intent.putExtra("mode", "new_user") // Modo especial para nuevo usuario
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    startActivity(intent)
                     finish()
                 }.onFailure { error ->
                     Toast.makeText(this@RegisterActivity, error.message ?: getString(R.string.error_register), Toast.LENGTH_LONG).show()

@@ -301,7 +301,11 @@ class BenefitsActivity : AppCompatActivity() {
                     binding.activePlanStatus.text = statusText
                     
                     // Aplicar lógica según el modo
-                    if (mode == "upgrade") {
+                    if (mode == "new_user") {
+                        // Modo "new_user": mostrar ambos planes para que el usuario elija
+                        // Si no tiene suscripción, mostrar ambos planes
+                        applyNewUserMode()
+                    } else if (mode == "upgrade") {
                         // Modo "Suscríbete ahora": mostrar el plan opuesto para cambiar
                         if (hasPaidPeriodActive) {
                             // Tiene periodo pagado activo (cambió a básico pero aún tiene premium activo)
@@ -341,10 +345,13 @@ class BenefitsActivity : AppCompatActivity() {
                     }
                 } else {
                     // Si no tiene suscripción
-                    binding.activePlanName.text = "Pixelie Basic Plan"
-                    binding.activePlanStatus.text = "Activo"
+                    binding.activePlanName.text = "Sin plan activo"
+                    binding.activePlanStatus.text = "Selecciona un plan"
                     
-                    if (mode == "upgrade") {
+                    if (mode == "new_user") {
+                        // Modo new_user: mostrar ambos planes para que elija
+                        applyNewUserMode()
+                    } else if (mode == "upgrade") {
                         // Modo upgrade: mostrar premium para que pueda suscribirse
                         applyUpgradeModeBasic()
                     } else {
