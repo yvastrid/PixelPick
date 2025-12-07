@@ -1097,6 +1097,67 @@ def test_email():
         logger.error(traceback.format_exc())
         return jsonify({'error': f'Error al procesar la solicitud: {str(e)}'}), 500
 
+# ==================== RUTA TEMPORAL PARA LIMPIEZA DE BD ====================
+# ⚠️ ELIMINAR ESTA RUTA DESPUÉS DE USARLA
+
+@app.route('/api/admin/cleanup-db-columns', methods=['POST'])
+def cleanup_db_columns():
+    """Endpoint temporal para eliminar columnas no utilizadas de la base de datos"""
+    try:
+        from sqlalchemy import text, inspect
+        
+        # Verificar que estamos en producción (solo ejecutar si hay DATABASE_URL)
+        if not app.config.get('DATABASE_URL'):
+            return jsonify({'error': 'Este endpoint solo funciona en producción'}), 400
+        
+        inspector = inspect(db.engine)
+        
+        # Verificar columnas existentes
+        columns = [col['name'] for col in inspector.get_columns('users')]
+        
+        columnas_a_eliminar = []
+        if 'email_verification_token' in columns:
+            columnas_a_eliminar.append('email_verification_token')
+        if 'email_verification_sent_at' in columns:
+            columnas_a_eliminar.append('email_verification_sent_at')
+        
+        if not columnas_a_eliminar:
+            return jsonify({
+                'success': True,
+                'message': 'Las columnas ya no existen en la base de datos',
+                'columns_removed': []
+            }), 200
+        
+        # Eliminar las columnas
+        removed_columns = []
+        for columna in columnas_a_eliminar:
+            try:
+                db.session.execute(text(f"ALTER TABLE users DROP COLUMN IF EXISTS {columna};"))
+                removed_columns.append(columna)
+                logger.info(f"Columna {columna} eliminada exitosamente")
+            except Exception as e:
+                logger.error(f"Error al eliminar {columna}: {str(e)}")
+                return jsonify({'error': f'Error al eliminar {columna}: {str(e)}'}), 500
+        
+        # Confirmar cambios
+        db.session.commit()
+        
+        # Verificar eliminación
+        columns_after = [col['name'] for col in inspector.get_columns('users')]
+        
+        return jsonify({
+            'success': True,
+            'message': f'Columnas eliminadas exitosamente: {", ".join(removed_columns)}',
+            'columns_removed': removed_columns,
+            'remaining_columns': columns_after
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error al limpiar columnas: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({'error': f'Error al procesar la solicitud: {str(e)}'}), 500
+
 # ==================== RUTAS DE PAGO - STRIPE ====================
 
 @app.route('/checkout')
