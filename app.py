@@ -648,14 +648,42 @@ def update_profile():
 @app.route('/api/profile/delete', methods=['DELETE'])
 @login_required
 def delete_account():
-    """Eliminar cuenta del usuario"""
+    """Eliminar cuenta del usuario y todos sus registros relacionados"""
     try:
         user = current_user
         user_id = user.id
         
-        # Eliminar usuario (las relaciones se eliminan en cascada)
+        logger.info(f"Iniciando eliminación de cuenta para usuario ID: {user_id}")
+        
+        # Eliminar todas las transacciones del usuario
+        transactions = Transaction.query.filter_by(user_id=user_id).all()
+        for transaction in transactions:
+            db.session.delete(transaction)
+        logger.info(f"Eliminadas {len(transactions)} transacciones del usuario {user_id}")
+        
+        # Eliminar todas las suscripciones del usuario
+        subscriptions = Subscription.query.filter_by(user_id=user_id).all()
+        for subscription in subscriptions:
+            db.session.delete(subscription)
+        logger.info(f"Eliminadas {len(subscriptions)} suscripciones del usuario {user_id}")
+        
+        # Eliminar todos los juegos del usuario (UserGame)
+        user_games = UserGame.query.filter_by(user_id=user_id).all()
+        for user_game in user_games:
+            db.session.delete(user_game)
+        logger.info(f"Eliminados {len(user_games)} juegos del usuario {user_id}")
+        
+        # Eliminar todas las preferencias del usuario
+        preferences = UserPreference.query.filter_by(user_id=user_id).all()
+        for preference in preferences:
+            db.session.delete(preference)
+        logger.info(f"Eliminadas {len(preferences)} preferencias del usuario {user_id}")
+        
+        # Finalmente, eliminar el usuario
         db.session.delete(user)
         db.session.commit()
+        
+        logger.info(f"Usuario {user_id} eliminado exitosamente junto con todos sus registros relacionados")
         
         logout_user()
         
@@ -666,6 +694,8 @@ def delete_account():
         
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error al eliminar cuenta del usuario {user_id}: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({'error': f'Error al eliminar cuenta: {str(e)}'}), 500
 
 # ==================== API RUTAS - JUEGOS ====================
