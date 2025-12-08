@@ -215,7 +215,7 @@ class ProfileActivity : AppCompatActivity() {
     private fun showDeleteAccountDialog() {
         AlertDialog.Builder(this)
             .setTitle("Eliminar Cuenta")
-            .setMessage("¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.")
+            .setMessage("¿Deseas eliminar tu cuenta?\n\nSi eliminas tu cuenta, se perderán permanentemente todos tus datos, incluyendo:\n• Tus juegos y progreso\n• Tus preferencias\n• Tus transacciones y suscripciones\n• Tu historial completo\n\nEsta acción no se puede deshacer.")
             .setPositiveButton("Eliminar") { _, _ ->
                 deleteAccount()
             }
