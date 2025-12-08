@@ -213,9 +213,17 @@ class ProfileActivity : AppCompatActivity() {
     }
     
     private fun showDeleteAccountDialog() {
+        val message = "¿Deseas eliminar tu cuenta?\n\nSi eliminas tu cuenta, se perderán permanentemente todos tus datos, incluyendo:\n• Tus juegos y progreso\n• Tus preferencias\n• Tus transacciones y suscripciones\n• Tu historial completo\n\nEsta acción no se puede deshacer."
+        
+        val textView = android.widget.TextView(this)
+        textView.text = message
+        textView.setTextColor(android.graphics.Color.parseColor("#424242")) // Gris oscuro
+        textView.setPadding(50, 40, 50, 10)
+        textView.textSize = 14f
+        
         AlertDialog.Builder(this)
             .setTitle("Eliminar Cuenta")
-            .setMessage("¿Deseas eliminar tu cuenta?\n\nSi eliminas tu cuenta, se perderán permanentemente todos tus datos, incluyendo:\n• Tus juegos y progreso\n• Tus preferencias\n• Tus transacciones y suscripciones\n• Tu historial completo\n\nEsta acción no se puede deshacer.")
+            .setView(textView)
             .setPositiveButton("Eliminar") { _, _ ->
                 deleteAccount()
             }
