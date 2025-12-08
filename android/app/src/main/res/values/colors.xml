@@ -25,5 +25,6 @@
     <color name="accent_gradient_end">#5B86E5</color>
     <color name="error_red">#FF5252</color>
     <color name="success_green">#4CAF50</color>
+    <color name="text_dark_gray">#424242</color>
 </resources>
 

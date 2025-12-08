@@ -73,8 +73,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/first_name"
-                android:inputType="textPersonName"
-                android:textColor="@color/text_primary"
+                android:inputType="textPersonName|textCapWords"
+                android:textColor="@color/text_dark_gray"
                 android:textColorHint="@color/text_secondary" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -92,8 +92,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/last_name"
-                android:inputType="textPersonName"
-                android:textColor="@color/text_primary"
+                android:inputType="textPersonName|textCapWords"
+                android:textColor="@color/text_dark_gray"
                 android:textColorHint="@color/text_secondary" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -112,7 +112,7 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/email"
                 android:inputType="textEmailAddress"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/text_dark_gray"
                 android:textColorHint="@color/text_secondary" />
 
         </com.google.android.material.textfield.TextInputLayout>
@@ -133,7 +133,7 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/password"
                 android:inputType="textPassword"
-                android:textColor="@color/text_primary"
+                android:textColor="@color/text_dark_gray"
                 android:textColorHint="@color/text_secondary" />
 
         </com.google.android.material.textfield.TextInputLayout>

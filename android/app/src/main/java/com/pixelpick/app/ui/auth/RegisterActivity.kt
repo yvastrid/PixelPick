@@ -2,6 +2,8 @@ package com.pixelpick.app.ui.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.InputFilter
+import android.text.Spanned
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -14,6 +16,7 @@ import com.pixelpick.app.ui.main.MainActivity
 import com.pixelpick.app.ui.subscription.BenefitsActivity
 import com.pixelpick.app.util.SessionManager
 import kotlinx.coroutines.launch
+import java.util.regex.Pattern
 
 class RegisterActivity : AppCompatActivity() {
     
@@ -84,14 +87,58 @@ class RegisterActivity : AppCompatActivity() {
             finish()
         }
         
+        // Agregar filtros de entrada para validar mientras el usuario escribe
+        setupInputFilters()
+        
         // Password visibility is handled by TextInputLayout's endIconMode
+    }
+    
+    private fun setupInputFilters() {
+        // Filtro para nombre y apellido: solo letras (sin números ni espacios)
+        val nameFilter = InputFilter { source, start, end, dest, dstart, dend ->
+            val regex = Pattern.compile("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]*$")
+            for (i in start until end) {
+                val char = source[i].toString()
+                if (!regex.matcher(char).matches()) {
+                    return@InputFilter ""
+                }
+            }
+            null
+        }
+        
+        binding.firstNameEditText.filters = arrayOf(nameFilter)
+        binding.lastNameEditText.filters = arrayOf(nameFilter)
+        
+        // Filtro para email: no espacios en blanco
+        val emailFilter = InputFilter { source, start, end, dest, dstart, dend ->
+            for (i in start until end) {
+                if (Character.isWhitespace(source[i])) {
+                    return@InputFilter ""
+                }
+            }
+            null
+        }
+        
+        binding.emailEditText.filters = arrayOf(emailFilter)
+        
+        // Filtro para contraseña: no espacios en blanco
+        val passwordFilter = InputFilter { source, start, end, dest, dstart, dend ->
+            for (i in start until end) {
+                if (Character.isWhitespace(source[i])) {
+                    return@InputFilter ""
+                }
+            }
+            null
+        }
+        
+        binding.passwordEditText.filters = arrayOf(passwordFilter)
     }
     
     private fun performRegister() {
         val firstName = binding.firstNameEditText.text.toString().trim()
         val lastName = binding.lastNameEditText.text.toString().trim()
         val email = binding.emailEditText.text.toString().trim()
-        val password = binding.passwordEditText.text.toString()
+        val password = binding.passwordEditText.text.toString().trim()
         val termsAccepted = binding.termsCheckBox.isChecked
         
         if (validateInput(firstName, lastName, email, password, termsAccepted)) {
@@ -126,13 +173,39 @@ class RegisterActivity : AppCompatActivity() {
         password: String,
         termsAccepted: Boolean
     ): Boolean {
+        // Validar campos vacíos
         if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, R.string.error_required_fields, Toast.LENGTH_SHORT).show()
             return false
         }
         
+        // Validar nombre: solo letras (sin números ni espacios)
+        val namePattern = Pattern.compile("^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]+$")
+        if (!namePattern.matcher(firstName).matches()) {
+            Toast.makeText(this, "El nombre solo puede contener letras", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        
+        // Validar apellido: solo letras (sin números ni espacios)
+        if (!namePattern.matcher(lastName).matches()) {
+            Toast.makeText(this, "El apellido solo puede contener letras", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        
+        // Validar email: formato válido sin espacios
+        if (email.contains(" ")) {
+            Toast.makeText(this, "El correo electrónico no puede contener espacios", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Email inválido", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Email inválido. Formato: texto@texto.texto", Toast.LENGTH_SHORT).show()
+            return false
+        }
+        
+        // Validar contraseña: sin espacios, mínimo 8 caracteres
+        if (password.contains(" ")) {
+            Toast.makeText(this, "La contraseña no puede contener espacios", Toast.LENGTH_SHORT).show()
             return false
         }
         
@@ -141,6 +214,7 @@ class RegisterActivity : AppCompatActivity() {
             return false
         }
         
+        // Validar términos y condiciones
         if (!termsAccepted) {
             Toast.makeText(this, R.string.error_terms, Toast.LENGTH_SHORT).show()
             return false
